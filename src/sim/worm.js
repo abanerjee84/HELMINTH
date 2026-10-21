@@ -44,6 +44,7 @@ export class Worm {
     this.foodEaten = 0;
     this.foodEnergy = 0;
     this.distanceTravelled = 0;
+    this.straightTravel = 0;
     this.radiansTurned = 0;
     this.hazardTime = 0;
     this.predatorHits = 0;
@@ -53,6 +54,10 @@ export class Worm {
     this.collisionHits = 0;
     this.selfCollisionHits = 0;
     this.otherCollisionHits = 0;
+
+    this.velocityX = Math.cos(heading) * config.worm.minSpeed;
+    this.velocityY = Math.sin(heading) * config.worm.minSpeed;
+    this.averageSpeed = config.worm.minSpeed;
 
     this.sensorValues = new Array(SENSOR_COUNT).fill(0);
     this.activations = {
@@ -80,11 +85,20 @@ export class Worm {
     return Math.hypot(this.x - this.spawnX, this.y - this.spawnY);
   }
 
+  get straightness() {
+    if (this.averageSpeed < 1) return 0;
+    return clamp(
+      Math.hypot(this.velocityX, this.velocityY) / this.averageSpeed,
+      0,
+      1,
+    );
+  }
+
   get fitness() {
     const f = this.config.fitness;
     const survival = this.age * f.perSecond;
     const food = this.foodEaten * f.perFood;
-    const travel = this.distanceTravelled * f.perUnitTravelled;
+    const travel = this.straightTravel * f.perUnitTravelled;
     const forward = this.forwardProgress * f.perUnitForward;
     const turning = this.radiansTurned * f.perRadianTurned;
     const energy = this.energy * f.finalEnergy;
@@ -97,7 +111,7 @@ export class Worm {
     return {
       food: this.foodEaten * f.perFood,
       survival: this.age * f.perSecond,
-      travel: this.distanceTravelled * f.perUnitTravelled,
+      travel: this.straightTravel * f.perUnitTravelled,
       forward: this.forwardProgress * f.perUnitForward,
       turning: this.radiansTurned * f.perRadianTurned,
       energy: this.energy * f.finalEnergy,
@@ -318,7 +332,16 @@ export class Worm {
     const previousY = this.y;
     this.x += Math.cos(this.heading) * this.speed * dt;
     this.y += Math.sin(this.heading) * this.speed * dt;
-    this.distanceTravelled += Math.hypot(this.x - previousX, this.y - previousY);
+    const stepDistance = Math.hypot(this.x - previousX, this.y - previousY);
+    this.distanceTravelled += stepDistance;
+
+    const velocityX = (this.x - previousX) / dt;
+    const velocityY = (this.y - previousY) / dt;
+    const blend = 1 - Math.exp(-dt / this.config.worm.straightnessWindow);
+    this.velocityX = lerp(this.velocityX, velocityX, blend);
+    this.velocityY = lerp(this.velocityY, velocityY, blend);
+    this.averageSpeed = lerp(this.averageSpeed, this.speed, blend);
+    this.straightTravel += stepDistance * this.straightness;
 
     const margin = 26;
     let wallHit = false;

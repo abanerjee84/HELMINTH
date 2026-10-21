@@ -81,6 +81,7 @@ export class Dashboard {
     this.leaderFood = document.getElementById('leaderFood');
     this.leaderTime = document.getElementById('leaderTime');
     this.leaderForward = document.getElementById('leaderForward');
+    this.leaderStraight = document.getElementById('leaderStraight');
     this.leaderEnergy = document.getElementById('leaderEnergy');
     this.leaderEnergyBar = document.getElementById('leaderEnergyBar');
     this.standings = document.getElementById('standings');
@@ -258,6 +259,12 @@ export class Dashboard {
       this.setText(this.leaderScore, formatInteger(worm.fitness));
       this.setText(this.leaderFood, String(worm.foodEaten));
       this.setText(this.leaderForward, formatInteger(worm.forwardProgress));
+      this.setText(
+        this.leaderStraight,
+        `${Math.round(
+          (worm.straightTravel / Math.max(1, worm.distanceTravelled)) * 100,
+        )}%`,
+      );
       this.setText(this.leaderTime, `${worm.age.toFixed(0)}s`);
       const energyPercent = Math.round((worm.energy / worm.maxEnergy) * 100);
       this.setText(this.leaderEnergy, `${energyPercent}%`);

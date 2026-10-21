@@ -55,6 +55,7 @@ export const CONFIG = Object.freeze({
     wormSensorRange: 300,
     chomperSensorRange: 300,
     bodyFriction: 18,
+    straightnessWindow: 2.4,
     collision: {
       scale: 0.82,
       selfGuardSegments: 5,
