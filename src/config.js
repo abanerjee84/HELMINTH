@@ -43,9 +43,6 @@ export const CONFIG = Object.freeze({
     collision: {
       scale: 0.82,
       selfGuardSegments: 5,
-      response: 0.22,
-      impactSpeedLoss: 0.58,
-      cooldown: 0.35,
     },
   },
   fitness: {

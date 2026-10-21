@@ -86,11 +86,9 @@ export class Evolution {
     this.ecology.update(dt);
     this.elapsed += dt;
 
-    let alive = 0;
     for (const agent of this.agents) {
       const worm = agent.worm;
       if (!worm.alive) continue;
-      alive += 1;
       worm.sense(this.ecology);
       worm.think();
       const result = worm.step(dt, this.ecology);
@@ -121,14 +119,26 @@ export class Evolution {
       }
     }
 
-    resolveWormCollisions(this.agents);
+    const collisionDeaths = resolveWormCollisions(this.agents);
+    for (const worm of collisionDeaths) {
+      this.events.push({
+        type: 'death',
+        x: worm.x,
+        y: worm.y,
+        color: worm.color,
+        cause: worm.deathCause,
+      });
+    }
 
     this.ranking = [...this.agents].sort(
       (a, b) => b.worm.fitness - a.worm.fitness || a.index - b.index,
     );
-    this.timeAlive = alive;
+    this.timeAlive = this.agents.reduce(
+      (total, agent) => total + (agent.worm.alive ? 1 : 0),
+      0,
+    );
 
-    if (this.elapsed >= this.config.episodeSeconds || alive === 0) {
+    if (this.elapsed >= this.config.episodeSeconds || this.timeAlive === 0) {
       this.completeGeneration();
     }
   }

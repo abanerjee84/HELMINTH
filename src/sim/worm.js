@@ -45,7 +45,6 @@ export class Worm {
     this.collisionHits = 0;
     this.selfCollisionHits = 0;
     this.otherCollisionHits = 0;
-    this.collisionCooldown = 0;
 
     this.sensorValues = new Array(8 + 4 + 2).fill(0);
     this.activations = {
@@ -162,7 +161,6 @@ export class Worm {
     if (!this.alive) return null;
 
     this.age += dt;
-    this.collisionCooldown = Math.max(0, this.collisionCooldown - dt);
 
     const steeringTarget = this.outputs.turn;
     const throttleTarget = this.outputs.thrust;
@@ -261,33 +259,6 @@ export class Worm {
       hazardIntensity,
       wallHit,
     };
-  }
-
-  translate(dx, dy) {
-    this.x += dx;
-    this.y += dy;
-    for (const segment of this.body) {
-      segment.x += dx;
-      segment.y += dy;
-    }
-  }
-
-  syncBody() {
-    const { segments, spacing } = this.config.worm;
-    this.body[0].x = this.x;
-    this.body[0].y = this.y;
-
-    for (let index = 1; index < segments; index += 1) {
-      const previous = this.body[index - 1];
-      const current = this.body[index];
-      const dx = previous.x - current.x;
-      const dy = previous.y - current.y;
-      const distance = Math.hypot(dx, dy);
-      if (distance > spacing) {
-        current.x = previous.x - (dx / distance) * spacing;
-        current.y = previous.y - (dy / distance) * spacing;
-      }
-    }
   }
 
   updateBody(dt) {
