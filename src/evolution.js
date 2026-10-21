@@ -8,7 +8,7 @@ import { buildSubstrate } from './neat/hyperneat.js';
 import { resolveWormCollisions } from './sim/collisions.js';
 import { Ecology } from './sim/ecology.js';
 import { ChomperPack } from './sim/predators.js';
-import { clamp, mulberry32 } from './sim/random.js';
+import { mulberry32 } from './sim/random.js';
 import { Worm } from './sim/worm.js';
 
 const ENVIRONMENT_SEED_STEP = 7919;
@@ -165,13 +165,12 @@ export class Evolution {
       0,
     );
 
-    if (this.elapsed >= this.config.episodeSeconds || this.timeAlive === 0) {
+    if (this.timeAlive === 0) {
       this.completeGeneration();
     }
   }
 
   completeGeneration() {
-    this.elapsed = Math.min(this.elapsed, this.config.episodeSeconds);
     this.phase = 'intermission';
     this.ranking = [...this.agents].sort(
       (a, b) => b.worm.fitness - a.worm.fitness || a.index - b.index,
@@ -248,10 +247,6 @@ export class Evolution {
       nodes: genome.nodes.map((node) => ({ ...node })),
       connections: genome.connections.map((connection) => ({ ...connection })),
     };
-  }
-
-  get timeLeft() {
-    return clamp(this.config.episodeSeconds - this.elapsed, 0, this.config.episodeSeconds);
   }
 
   get leader() {

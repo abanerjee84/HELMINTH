@@ -72,7 +72,7 @@ The substrate close-up shows the evolved topology in motion: food, hazard, rival
 5. **Score.** Fitness combines food, survival time, distance travelled, net forward progress, remaining energy, and hazard exposure.
 6. **Select.** The population is ranked; elites survive, and tournament selection with crossover and mutation produces the next cohort.
 
-Episodes last 36 seconds. A generation ends when the timer expires or no worms remain. The default population is 28 worms, with 3 elites, tournament size 4, crossover rate 0.72, and a 4×/8× fast-forward control.
+There is no generation time limit. A generation ends only when the last worm dies. The default population is 28 worms, with 3 elites, tournament size 4, crossover rate 0.72, and a 4×/8× fast-forward control.
 
 ## Adaptive substrate
 
@@ -153,12 +153,13 @@ assess/                Playwright visual and behavioral assessment
 
 ## Verification
 
-`npm run assess` currently passes **17/17** checks, including:
+`npm run assess` currently passes **18/18** checks, including:
 
 - WebGL arena geometry and visible motion;
 - three active chompers;
 - 22 sensors with food, hazard, worm, and chomper channels;
 - cohort scoring and advancement to the next generation;
+- intermission only after every worm has died;
 - pause/resume behavior;
 - rendered fitness trace;
 - 1440×900 compact layout with no clipped panels or page overflow;

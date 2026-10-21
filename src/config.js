@@ -9,7 +9,6 @@ export const STEP = 1 / 60;
 export const CONFIG = Object.freeze({
   seed: 4217,
   populationSize: 28,
-  episodeSeconds: 36,
   eliteCount: 3,
   tournamentSize: 4,
   crossoverRate: 0.72,

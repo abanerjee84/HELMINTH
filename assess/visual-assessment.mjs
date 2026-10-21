@@ -268,16 +268,21 @@ async function run() {
     await page.waitForFunction(
       () => window.__HELMINTH__.getState().phase === 'intermission',
       null,
-      { timeout: 20_000 },
+      { timeout: 60_000 },
     );
     await page.waitForTimeout(180);
+    const scoredState = await page.evaluate(() => window.__HELMINTH__.getState());
     const scored = await page.screenshot({ fullPage: true });
     report.screenshots.scored = saveImage('05-cohort-scored.png', scored);
-    const scoredState = await page.evaluate(() => window.__HELMINTH__.getState());
     check(
       'first cohort receives a fitness score',
       scoredState.history.length >= 1 && scoredState.history[0].best > 0,
       `history=${scoredState.history.length}, best=${Math.round(scoredState.history[0]?.best ?? 0)}`,
+    );
+    check(
+      'generation completes only after every worm dies',
+      scoredState.alive === 0,
+      `${scoredState.alive} worms alive at intermission`,
     );
 
     await page.waitForFunction(

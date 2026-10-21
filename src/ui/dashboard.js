@@ -1,4 +1,3 @@
-import { CONFIG } from '../config.js';
 import { SUBSTRATE_LAYOUT } from '../neat/hyperneat.js';
 
 const numberFormat = new Intl.NumberFormat('en-US');
@@ -8,9 +7,9 @@ function formatInteger(value) {
 }
 
 function formatTimer(seconds) {
-  const clamped = Math.max(0, Math.ceil(seconds));
-  const minutes = Math.floor(clamped / 60);
-  const remainder = clamped % 60;
+  const elapsed = Math.max(0, Math.floor(seconds));
+  const minutes = Math.floor(elapsed / 60);
+  const remainder = elapsed % 60;
   return `${String(minutes).padStart(2, '0')}:${String(remainder).padStart(2, '0')}`;
 }
 
@@ -226,11 +225,11 @@ export class Dashboard {
 
     const generation = String(evolution.generation).padStart(2, '0');
     this.setText(this.genNumber, generation);
-    this.setText(this.genTime, formatTimer(evolution.timeLeft));
-    const progress = intermission
-      ? 100
-      : Math.min(100, (evolution.elapsed / CONFIG.episodeSeconds) * 100);
-    this.genProgress.style.width = `${progress.toFixed(2)}%`;
+    this.setText(this.genTime, formatTimer(evolution.elapsed));
+    const survival = intermission
+      ? 0
+      : (evolution.aliveCount / Math.max(1, evolution.agents.length)) * 100;
+    this.genProgress.style.width = `${survival.toFixed(2)}%`;
 
     const alive = evolution.agents.filter((agent) => agent.worm.alive).length;
     const average =
