@@ -123,7 +123,7 @@ button:focus-visible {
 .brand-copy p {
   margin: 6px 0 0;
   font-family: var(--mono);
-  font-size: 7.5px;
+  font-size: 8px;
   font-weight: 500;
   letter-spacing: 0.13em;
   color: var(--faint);
@@ -180,7 +180,7 @@ button:focus-visible {
 
 .run-status strong {
   font-family: var(--mono);
-  font-size: 8.5px;
+  font-size: 9px;
   font-weight: 600;
   letter-spacing: 0.17em;
   color: var(--acid);
@@ -188,7 +188,7 @@ button:focus-visible {
 
 .run-status span {
   font-family: var(--mono);
-  font-size: 8px;
+  font-size: 8.5px;
   color: var(--faint);
   letter-spacing: 0.025em;
 }
@@ -209,14 +209,14 @@ button:focus-visible {
 
 .tech-readout span {
   font-family: var(--mono);
-  font-size: 7px;
+  font-size: 7.5px;
   letter-spacing: 0.14em;
   color: var(--faint);
 }
 
 .tech-readout strong {
   font-family: var(--mono);
-  font-size: 8px;
+  font-size: 8.5px;
   font-weight: 500;
   letter-spacing: 0.08em;
   color: #b8cfc2;
@@ -280,7 +280,7 @@ button:focus-visible {
   gap: 7px;
   margin-bottom: 10px;
   font-family: var(--mono);
-  font-size: 7.5px;
+  font-size: 8px;
   font-weight: 500;
   letter-spacing: 0.14em;
   color: var(--faint);
@@ -416,7 +416,7 @@ button:focus-visible {
 .start-copy small {
   overflow: hidden;
   font-family: var(--mono);
-  font-size: 7px;
+  font-size: 7.5px;
   font-weight: 500;
   letter-spacing: 0.015em;
   color: rgba(22, 38, 11, 0.6);
@@ -430,7 +430,7 @@ button:focus-visible {
   height: 27px;
   flex: 0 0 auto;
   font-family: var(--mono);
-  font-size: 7px;
+  font-size: 7.5px;
   font-weight: 700;
   letter-spacing: 0.06em;
   color: rgba(24, 42, 10, 0.52);
@@ -455,7 +455,7 @@ button:focus-visible {
 
 .speed-control > span {
   font-family: var(--mono);
-  font-size: 7px;
+  font-size: 7.5px;
   letter-spacing: 0.13em;
   color: var(--faint);
 }
@@ -473,7 +473,7 @@ button:focus-visible {
   height: 23px;
   padding: 0;
   font-family: var(--mono);
-  font-size: 8px;
+  font-size: 8.5px;
   color: var(--muted);
   cursor: pointer;
   border: 0;
@@ -505,7 +505,7 @@ button:focus-visible {
   gap: 5px;
   padding: 0 7px;
   font-family: var(--mono);
-  font-size: 7.5px;
+  font-size: 8px;
   letter-spacing: 0.04em;
   color: var(--muted);
   cursor: pointer;
@@ -534,7 +534,7 @@ button:focus-visible {
   margin-top: 11px;
   padding-top: 10px;
   font-family: var(--mono);
-  font-size: 6.5px;
+  font-size: 7px;
   letter-spacing: 0.06em;
   color: var(--faint);
   border-top: 1px solid rgba(160, 255, 200, 0.08);
@@ -561,13 +561,13 @@ button:focus-visible {
 }
 
 .section-heading > span {
-  font-size: 7.5px;
+  font-size: 8px;
   letter-spacing: 0.12em;
   color: var(--faint);
 }
 
 .section-heading > strong {
-  font-size: 7.5px;
+  font-size: 8px;
   font-weight: 500;
   letter-spacing: 0.06em;
   color: var(--acid);
@@ -597,7 +597,7 @@ button:focus-visible {
 
 .gen-number small {
   font-family: var(--mono);
-  font-size: 7px;
+  font-size: 7.5px;
   letter-spacing: 0.1em;
   color: var(--faint);
   text-transform: uppercase;
@@ -610,14 +610,14 @@ button:focus-visible {
 
 .phase-copy span {
   font-family: var(--mono);
-  font-size: 7.5px;
+  font-size: 8px;
   letter-spacing: 0.1em;
   color: var(--aqua);
 }
 
 .phase-copy p {
   margin: 4px 0 0;
-  font-size: 8px;
+  font-size: 8.5px;
   line-height: 1.35;
   color: var(--faint);
 }
@@ -680,7 +680,7 @@ button:focus-visible {
 
 .stat > span {
   font-family: var(--mono);
-  font-size: 6.5px;
+  font-size: 7px;
   letter-spacing: 0.1em;
   color: var(--faint);
 }
@@ -699,7 +699,7 @@ button:focus-visible {
 
 .stat strong small {
   margin-left: 3px;
-  font-size: 7px;
+  font-size: 7.5px;
   letter-spacing: 0;
   color: var(--faint);
 }
@@ -772,7 +772,7 @@ button:focus-visible {
 .agent-name strong {
   overflow: hidden;
   font-family: var(--mono);
-  font-size: 9px;
+  font-size: 9.5px;
   font-weight: 500;
   letter-spacing: 0.05em;
   white-space: nowrap;
@@ -782,7 +782,7 @@ button:focus-visible {
 .leader-tag {
   padding: 2px 4px;
   font-family: var(--mono);
-  font-size: 5.5px;
+  font-size: 6px;
   letter-spacing: 0.08em;
   color: color-mix(in srgb, var(--agent) 75%, white);
   border: 1px solid color-mix(in srgb, var(--agent) 25%, transparent);
@@ -793,7 +793,7 @@ button:focus-visible {
   display: block;
   margin: 4px 0 0 11px;
   font-family: var(--mono);
-  font-size: 6.5px;
+  font-size: 7px;
   color: var(--faint);
 }
 
@@ -806,7 +806,7 @@ button:focus-visible {
 
 .leader-score > span {
   font-family: var(--mono);
-  font-size: 6.5px;
+  font-size: 7px;
   letter-spacing: 0.1em;
   color: var(--faint);
 }
@@ -838,14 +838,14 @@ button:focus-visible {
 
 .leader-metrics span {
   font-family: var(--mono);
-  font-size: 5.8px;
+  font-size: 6.3px;
   letter-spacing: 0.06em;
   color: var(--faint);
 }
 
 .leader-metrics b {
   font-family: var(--mono);
-  font-size: 7px;
+  font-size: 7.5px;
   font-weight: 500;
   color: #c5d9cd;
 }
@@ -893,7 +893,7 @@ button:focus-visible {
 
 .standing-rank {
   font-family: var(--mono);
-  font-size: 7.5px;
+  font-size: 8px;
   color: var(--faint);
 }
 
@@ -911,26 +911,26 @@ button:focus-visible {
   align-items: center;
   gap: 5px;
   font-family: var(--mono);
-  font-size: 7px;
+  font-size: 7.5px;
   color: #b7cdc0;
 }
 
 .standing-name small {
-  font-size: 6px;
+  font-size: 6.5px;
   color: var(--faint);
 }
 
 .standing-food {
   margin-left: auto;
   font-family: var(--mono);
-  font-size: 6.5px;
+  font-size: 7px;
   color: var(--faint);
 }
 
 .standing-score {
   width: 35px;
   font-family: var(--mono);
-  font-size: 7.5px;
+  font-size: 8px;
   color: color-mix(in srgb, var(--row-agent) 70%, white);
   text-align: right;
 }
@@ -1042,14 +1042,14 @@ button:focus-visible {
 
 .culture-tag small {
   font-family: var(--mono);
-  font-size: 5.8px;
+  font-size: 6.3px;
   letter-spacing: 0.16em;
   color: var(--faint);
 }
 
 .culture-tag strong {
   font-family: var(--mono);
-  font-size: 7px;
+  font-size: 7.5px;
   font-weight: 500;
   letter-spacing: 0.08em;
   color: #c1d7ca;
@@ -1066,7 +1066,7 @@ button:focus-visible {
   gap: 5px;
   padding: 7px 8px;
   font-family: var(--mono);
-  font-size: 5.8px;
+  font-size: 6.3px;
   letter-spacing: 0.04em;
   color: #98b3a5;
   border: 1px solid rgba(157, 255, 198, 0.1);
@@ -1151,7 +1151,7 @@ button:focus-visible {
 
 .idle-prompt > span {
   font-family: var(--mono);
-  font-size: 6.5px;
+  font-size: 7px;
   letter-spacing: 0.18em;
   color: var(--acid);
 }
@@ -1166,7 +1166,7 @@ button:focus-visible {
 
 .idle-prompt p {
   margin: 0 auto;
-  font-size: 8.5px;
+  font-size: 9px;
   line-height: 1.5;
   color: var(--muted);
 }
@@ -1197,7 +1197,7 @@ button:focus-visible {
 
 .generation-toast span {
   font-family: var(--mono);
-  font-size: 6px;
+  font-size: 6.5px;
   letter-spacing: 0.16em;
   color: var(--acid);
 }
@@ -1212,7 +1212,7 @@ button:focus-visible {
 .generation-toast p {
   margin: 0;
   font-family: var(--mono);
-  font-size: 7px;
+  font-size: 7.5px;
   color: var(--muted);
 }
 
@@ -1243,7 +1243,7 @@ button:focus-visible {
   align-items: center;
   gap: 5px;
   font-family: var(--mono);
-  font-size: 5.8px;
+  font-size: 6.3px;
   letter-spacing: 0.06em;
   color: #91aa9e;
 }
@@ -1279,14 +1279,14 @@ button:focus-visible {
 
 .objective-tag span {
   font-family: var(--mono);
-  font-size: 5.8px;
+  font-size: 6.3px;
   letter-spacing: 0.13em;
   color: var(--faint);
 }
 
 .objective-tag strong {
   font-family: var(--mono);
-  font-size: 6.8px;
+  font-size: 7.2px;
   font-weight: 500;
   letter-spacing: 0.04em;
   color: #b7cbbf;
@@ -1329,7 +1329,7 @@ button:focus-visible {
   position: absolute;
   top: 50%;
   font-family: var(--mono);
-  font-size: 5.5px;
+  font-size: 6px;
   letter-spacing: 0.12em;
   color: var(--faint);
   writing-mode: vertical-rl;
@@ -1361,14 +1361,14 @@ button:focus-visible {
 
 .output-label span {
   font-family: var(--mono);
-  font-size: 6.5px;
+  font-size: 7px;
   letter-spacing: 0.1em;
   color: var(--faint);
 }
 
 .output-label b {
   font-family: var(--mono);
-  font-size: 8px;
+  font-size: 8.5px;
   font-weight: 400;
   color: var(--aqua);
 }
@@ -1422,7 +1422,7 @@ button:focus-visible {
   gap: 10px;
   margin-top: 9px;
   font-family: var(--mono);
-  font-size: 6px;
+  font-size: 6.5px;
   letter-spacing: 0.04em;
   color: var(--faint);
 }
@@ -1455,7 +1455,7 @@ button:focus-visible {
   align-items: center;
   gap: 4px;
   font-family: var(--mono);
-  font-size: 5.8px;
+  font-size: 6.3px;
   letter-spacing: 0.04em;
   color: var(--faint);
 }
@@ -1505,7 +1505,7 @@ button:focus-visible {
 
 .chart-footer span {
   font-family: var(--mono);
-  font-size: 5.8px;
+  font-size: 6.3px;
   letter-spacing: 0.07em;
   color: var(--faint);
 }
@@ -1534,7 +1534,7 @@ button:focus-visible {
   width: 34px;
   height: 34px;
   font-family: var(--mono);
-  font-size: 8px;
+  font-size: 8.5px;
   color: var(--acid);
   border: 1px solid rgba(200, 255, 109, 0.17);
   border-radius: 7px;
@@ -1544,14 +1544,14 @@ button:focus-visible {
 
 .method-copy > span {
   font-family: var(--mono);
-  font-size: 6px;
+  font-size: 6.5px;
   letter-spacing: 0.11em;
   color: var(--faint);
 }
 
 .method-copy p {
   margin: 4px 0 0;
-  font-size: 8px;
+  font-size: 8.5px;
   line-height: 1.45;
   color: var(--muted);
 }
@@ -1573,16 +1573,22 @@ button:focus-visible {
 
 .method-stats span {
   font-family: var(--mono);
-  font-size: 5.5px;
+  font-size: 6px;
   letter-spacing: 0.04em;
   color: var(--faint);
 }
 
 .method-stats b {
   font-family: var(--mono);
-  font-size: 7.5px;
+  font-size: 8px;
   font-weight: 400;
   color: #bcd3c5;
+}
+
+@media (max-height: 940px) {
+  .standing-row:nth-child(n + 4) {
+    display: none;
+  }
 }
 
 @media (max-height: 860px) {
@@ -1592,7 +1598,7 @@ button:focus-visible {
 
   .lede {
     margin-bottom: 10px;
-    font-size: 9.5px;
+    font-size: 10px;
   }
 
   .brain-stage {

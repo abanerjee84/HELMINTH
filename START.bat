@@ -26,7 +26,7 @@ echo [HELMINTH] App URL: http://127.0.0.1:4173/
 echo [HELMINTH] Press Ctrl+C to stop.
 
 start "" powershell -NoProfile -WindowStyle Hidden -Command "for ($i = 0; $i -lt 40; $i++) { try { $null = Invoke-WebRequest -UseBasicParsing 'http://127.0.0.1:4173/' -TimeoutSec 1; Start-Process 'http://127.0.0.1:4173/'; break } catch { Start-Sleep -Milliseconds 350 } }"
-call npm run dev -- --host 127.0.0.1 --port 4173 --strictPort
+call npm run dev -- --port 4173 --strictPort
 
 if errorlevel 1 (
   echo.

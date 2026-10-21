@@ -160,7 +160,7 @@ export class Dashboard {
       this.setText(this.runStatus, 'STANDBY');
       this.setText(this.statusMeta, 'Awaiting the first selection event');
       this.setText(this.startLabel, 'Start evolution');
-      this.setText(this.startHint, 'Seed population · run genetic algorithm');
+      this.setText(this.startHint, 'Seed population · evolve behavior');
       this.startButton.setAttribute('aria-label', 'Start evolution');
       this.setText(this.phaseLabel, 'PRE-FLIGHT');
       this.setText(this.phaseDetail, `${evolution.agents.length} substrates constructed`);
@@ -277,7 +277,7 @@ export class Dashboard {
   }
 
   updateStandings(evolution) {
-    const ranking = evolution.ranking.slice(1, 4);
+    const ranking = evolution.ranking.slice(1, 7);
     const key = ranking
       .map((agent) => `${agent.id}:${Math.round(agent.worm.fitness)}`)
       .join('|');
@@ -484,7 +484,7 @@ export class Dashboard {
 
   drawLabel(ctx, text, x, y, color, align = 'left') {
     ctx.save();
-    ctx.font = '500 5.6px "JetBrains Mono Variable", monospace';
+    ctx.font = '500 6.2px "JetBrains Mono Variable", monospace';
     ctx.textAlign = align;
     ctx.textBaseline = 'middle';
     ctx.fillStyle = color;
@@ -516,7 +516,7 @@ export class Dashboard {
     ctx.save();
     ctx.strokeStyle = 'rgba(151, 255, 201, 0.07)';
     ctx.lineWidth = 1;
-    ctx.font = '500 5.8px "JetBrains Mono Variable", monospace';
+    ctx.font = '500 6.4px "JetBrains Mono Variable", monospace';
     ctx.fillStyle = 'rgba(92, 125, 109, 0.7)';
     for (let index = 0; index <= 3; index += 1) {
       const y = padding.top + (plotHeight / 3) * index;
@@ -545,7 +545,7 @@ export class Dashboard {
       ctx.stroke();
       ctx.setLineDash([]);
       ctx.fillStyle = 'rgba(112, 143, 127, 0.72)';
-      ctx.font = '500 6px "JetBrains Mono Variable", monospace';
+      ctx.font = '500 6.5px "JetBrains Mono Variable", monospace';
       ctx.fillText('AWAITING COHORT 01', padding.left + 4, padding.top + 10);
       ctx.restore();
       return;
@@ -561,7 +561,7 @@ export class Dashboard {
       padding.top + plotHeight - Math.min(1, value / niceMax) * plotHeight;
 
     ctx.save();
-    ctx.font = '500 5.8px "JetBrains Mono Variable", monospace';
+    ctx.font = '500 6.4px "JetBrains Mono Variable", monospace';
     ctx.fillStyle = 'rgba(92, 125, 109, 0.72)';
     ctx.textAlign = 'right';
     ctx.fillText(formatInteger(niceMax), padding.left - 5, padding.top + 3);

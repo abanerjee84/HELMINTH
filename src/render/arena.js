@@ -250,8 +250,8 @@ class WormVisual {
     });
     this.eyeLeft = new THREE.Mesh(shared.eyeGeometry, this.eyeMaterial);
     this.eyeRight = new THREE.Mesh(shared.eyeGeometry, this.eyeMaterial);
-    this.eyeLeft.scale.setScalar(1.65);
-    this.eyeRight.scale.setScalar(1.65);
+    this.eyeLeft.scale.setScalar(2.05);
+    this.eyeRight.scale.setScalar(2.05);
     this.eyeLeft.renderOrder = 24;
     this.eyeRight.renderOrder = 24;
 
@@ -353,16 +353,10 @@ class WormVisual {
     const colors = this.bodyGeometry.getAttribute('color');
     for (let index = 0; index < segments; index += 1) {
       const progress = index / (segments - 1);
-      const shade = 0.95 - progress * 0.42;
-      const headGlow = index === 0 ? 0.14 : 0;
-      for (let side = 0; side < 2; side += 1) {
-        colors.setXYZ(
-          index * 2 + side,
-          shade + headGlow,
-          shade + headGlow,
-          shade + headGlow,
-        );
-      }
+      const shade = 0.95 - progress * 0.4;
+      const headGlow = index === 0 ? 0.12 : 0;
+      colors.setXYZ(index * 2, shade * 1.04 + headGlow, shade * 1.04 + headGlow, shade * 1.04 + headGlow);
+      colors.setXYZ(index * 2 + 1, shade * 0.76, shade * 0.76, shade * 0.76);
     }
     colors.needsUpdate = true;
 
@@ -669,9 +663,11 @@ export class ArenaRenderer {
           floorColor += vec3(0.28, 0.62, 0.48) * major * 0.03;
 
           vec2 cell = floor(p / 37.0);
-          float sparkle = step(0.986, hash21(cell));
+          vec2 cellLocal = fract(p / 37.0) - 0.5;
+          float sparkle = step(0.954, hash21(cell));
+          sparkle *= 1.0 - smoothstep(0.025, 0.075, length(cellLocal));
           sparkle *= 0.5 + 0.5 * sin(uTime * 0.7 + hash21(cell + 4.0) * 12.0);
-          floorColor += vec3(0.28, 0.72, 0.53) * sparkle * 0.065;
+          floorColor += vec3(0.28, 0.72, 0.53) * sparkle * 0.11;
 
           float border = 1.0 - smoothstep(0.0, 4.0, abs(sdf));
           float borderHaze = exp(-abs(sdf) * 0.055) * 0.45;

@@ -1,4 +1,4 @@
-import { CONFIG, STEP, WORLD } from '../config.js';
+import { CONFIG, WORLD } from '../config.js';
 import { forwardSubstrate } from '../neat/hyperneat.js';
 import { clamp, lerp } from './random.js';
 
@@ -195,10 +195,7 @@ export class Worm {
       this.wallHits += 1;
       this.speed *= 0.5;
       this.throttle *= 0.6;
-      this.heading = Math.atan2(
-        WORLD.height * 0.5 + (this.y % 9) - this.y,
-        WORLD.width * 0.5 + (this.x % 11) - this.x,
-      );
+      this.heading = Math.atan2(WORLD.height * 0.5 - this.y, WORLD.width * 0.5 - this.x);
     }
 
     const eaten = ecology.consumeFoodAt(
@@ -290,5 +287,3 @@ export class Worm {
     }
   }
 }
-
-export { STEP };
