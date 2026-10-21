@@ -11,6 +11,7 @@ export const CONFIG = Object.freeze({
   maxGenerationSeconds: 120,
   populationSize: 28,
   eliteFraction: 0.5,
+  immigrantFraction: 0.1,
   food: {
     count: 40,
     energy: 24,
@@ -64,6 +65,7 @@ export const CONFIG = Object.freeze({
     perSecond: 6,
     perUnitTravelled: 0.018,
     perUnitForward: 0.045,
+    perRadianTurned: 2.4,
     finalEnergy: 0.35,
     hazardPenalty: 3.5,
   },

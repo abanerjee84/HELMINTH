@@ -69,10 +69,10 @@ The substrate close-up shows the evolved topology in motion: food, hazard, rival
 2. **Think.** The worm's substrate performs a forward pass and emits turn and thrust outputs.
 3. **Move.** Steering, thrust, speed, body joints, wall contact, and energy drain update at a fixed 60 Hz simulation step.
 4. **Interact.** Food is consumed, toxic blooms damage worms, worm bodies collide, and chompers bite.
-5. **Score.** Fitness combines food, survival time, distance travelled, net forward progress, remaining energy, and hazard exposure.
-6. **Select.** The population is ranked; the top half is retained unchanged, and the bottom half is cloned and mutated into the next cohort.
+5. **Score.** Fitness combines food, survival time, distance travelled, net forward progress, remaining energy, hazard exposure, and a turning cost.
+6. **Select.** The population is ranked; the top half is retained unchanged, the bottom half is cloned and mutated, and a 10% immigrant slice is replaced with fresh random CPPNs.
 
-A generation ends when the last worm dies or after a 120-second cap, so a robust surviving cohort cannot stall evolution. The default population is 28 worms: the top 50% are kept as elites, and the bottom 50% are cloned and mutated into the next cohort. The UI also offers a 4×/8× fast-forward control.
+A generation ends when the last worm dies or after a 120-second cap, so a robust surviving cohort cannot stall evolution. The default population is 28 worms: the top 50% are kept as elites, the bottom 50% are mutated into the next cohort, and 10% are fresh random genomes. The UI also offers a 4×/8× fast-forward control.
 
 ## Adaptive substrate
 
@@ -109,10 +109,11 @@ fitness = max(0,
   + forwardProgress× 0.045
   + energy         × 0.35
   - hazardTime     × 3.5
+  - radiansTurned  × 2.4
 )
 ```
 
-`forwardProgress` is the net displacement from the worm's spawn point, not total path length, so looping in place does not earn the forward reward.
+`forwardProgress` is the net displacement from the worm's spawn point, not total path length, so looping in place does not earn the forward reward. `radiansTurned` is the absolute accumulated steering rotation, so continuous circling carries a fitness cost.
 
 ## Chompers
 

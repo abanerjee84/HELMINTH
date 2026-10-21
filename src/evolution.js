@@ -212,10 +212,20 @@ export class Evolution {
       genomes.push(this.cloneGenome(previous[index].genome));
     }
 
-    for (let index = eliteCount; index < previous.length; index += 1) {
+    const immigrantCount = Math.min(
+      previous.length - eliteCount,
+      Math.floor(previous.length * this.config.immigrantFraction),
+    );
+    const mutationEnd = previous.length - immigrantCount;
+
+    for (let index = eliteCount; index < mutationEnd; index += 1) {
       genomes.push(
         mutateCPPN(this.cloneGenome(previous[index].genome), this.populationRng),
       );
+    }
+
+    for (let index = 0; index < immigrantCount; index += 1) {
+      genomes.push(createInitialCPPN(this.populationRng));
     }
 
     this.generation += 1;

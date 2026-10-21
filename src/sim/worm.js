@@ -43,6 +43,7 @@ export class Worm {
     this.foodEaten = 0;
     this.foodEnergy = 0;
     this.distanceTravelled = 0;
+    this.radiansTurned = 0;
     this.hazardTime = 0;
     this.predatorHits = 0;
     this.biteFlash = 0;
@@ -84,9 +85,10 @@ export class Worm {
     const food = this.foodEaten * f.perFood;
     const travel = this.distanceTravelled * f.perUnitTravelled;
     const forward = this.forwardProgress * f.perUnitForward;
+    const turning = this.radiansTurned * f.perRadianTurned;
     const energy = this.energy * f.finalEnergy;
     const hazard = this.hazardTime * f.hazardPenalty;
-    return Math.max(0, food + survival + travel + forward + energy - hazard);
+    return Math.max(0, food + survival + travel + forward + energy - hazard - turning);
   }
 
   get fitnessParts() {
@@ -96,6 +98,7 @@ export class Worm {
       survival: this.age * f.perSecond,
       travel: this.distanceTravelled * f.perUnitTravelled,
       forward: this.forwardProgress * f.perUnitForward,
+      turning: this.radiansTurned * f.perRadianTurned,
       energy: this.energy * f.finalEnergy,
       hazard: this.hazardTime * f.hazardPenalty,
     };
@@ -267,6 +270,7 @@ export class Worm {
     this.throttle = lerp(this.throttle, throttleTarget, thrustLerp);
     this.angularVelocity = this.steering * this.config.worm.turnRate;
     this.heading = wrapAngle(this.heading + this.angularVelocity * dt);
+    this.radiansTurned += Math.abs(this.angularVelocity) * dt;
 
     const vigor = 0.62 + 0.38 * clamp(this.energy / this.maxEnergy, 0, 1);
     const targetSpeed =
