@@ -1,4 +1,5 @@
 import { CONFIG } from '../config.js';
+import { SUBSTRATE_LAYOUT } from '../neat/hyperneat.js';
 
 const numberFormat = new Intl.NumberFormat('en-US');
 
@@ -17,6 +18,19 @@ function formatFraction(value) {
   return (value ?? 0).toFixed(2);
 }
 
+function formatSigned(value) {
+  const normalized = Math.abs(value) < 0.005 ? 0 : value;
+  return `${normalized >= 0 ? '+' : '-'}${Math.abs(normalized).toFixed(2)}`;
+}
+
+function withAlpha(hex, alpha) {
+  const value = Number.parseInt(hex.slice(1), 16);
+  const red = (value >> 16) & 255;
+  const green = (value >> 8) & 255;
+  const blue = value & 255;
+  return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
+}
+
 function canvasSize(canvas, context) {
   const rect = canvas.getBoundingClientRect();
   const width = Math.max(1, Math.round(rect.width));
@@ -32,12 +46,13 @@ function canvasSize(canvas, context) {
   return { width, height };
 }
 
-function foodColor() {
-  return '#b9ff68';
-}
-
-function hazardColor() {
-  return '#ff6e9b';
+function inputColor(kind) {
+  if (kind === 'food') return '#b9ff68';
+  if (kind === 'hazard') return '#ff6e9b';
+  if (kind === 'worm') return '#6bc8ff';
+  if (kind === 'chomper') return '#ff9b71';
+  if (kind === 'energy') return '#ffc96b';
+  return '#85a99a';
 }
 
 export class Dashboard {
@@ -65,6 +80,7 @@ export class Dashboard {
     this.leaderScore = document.getElementById('leaderScore');
     this.leaderFood = document.getElementById('leaderFood');
     this.leaderTime = document.getElementById('leaderTime');
+    this.leaderForward = document.getElementById('leaderForward');
     this.leaderEnergy = document.getElementById('leaderEnergy');
     this.leaderEnergyBar = document.getElementById('leaderEnergyBar');
     this.standings = document.getElementById('standings');
@@ -73,7 +89,12 @@ export class Dashboard {
     this.toastTitle = document.getElementById('toastTitle');
     this.toastDetail = document.getElementById('toastDetail');
     this.cppnSignature = document.getElementById('cppnSignature');
-    this.brainNodeCount = document.getElementById('brainNodeCount');
+    this.brainDominant = document.getElementById('brainDominant');
+    this.brainDominantValue = document.getElementById('brainDominantValue');
+    this.brainHiddenMean = document.getElementById('brainHiddenMean');
+    this.brainActiveLinks = document.getElementById('brainActiveLinks');
+    this.brainTotalLinks = document.getElementById('brainTotalLinks');
+    this.brainArchitecture = document.getElementById('brainArchitecture');
     this.brainLinkCount = document.getElementById('brainLinkCount');
     this.hiddenNodes = document.getElementById('hiddenNodes');
     this.synapseCount = document.getElementById('synapseCount');
@@ -96,6 +117,7 @@ export class Dashboard {
     this.lastFitnessSignature = '__initial__';
     this.lastStandings = '';
     this.lastToastGeneration = 0;
+    this.brainTrace = { key: null, turn: [], thrust: [] };
     this.running = false;
   }
 
@@ -105,6 +127,7 @@ export class Dashboard {
     this.lastFitnessSignature = '__reset__';
     this.lastStandings = '';
     this.lastToastGeneration = 0;
+    this.brainTrace = { key: null, turn: [], thrust: [] };
     this.textCache.clear();
     this.toast.classList.remove('is-visible');
   }
@@ -234,20 +257,14 @@ export class Dashboard {
       );
       this.setText(this.leaderScore, formatInteger(worm.fitness));
       this.setText(this.leaderFood, String(worm.foodEaten));
+      this.setText(this.leaderForward, formatInteger(worm.forwardProgress));
       this.setText(this.leaderTime, `${worm.age.toFixed(0)}s`);
       const energyPercent = Math.round((worm.energy / worm.maxEnergy) * 100);
       this.setText(this.leaderEnergy, `${energyPercent}%`);
       this.leaderEnergyBar.style.width = `${energyPercent}%`;
 
       this.setText(this.cppnSignature, `CPPN ${leader.substrate.stats.signature.replaceAll(' · ', ' · ')}`);
-      this.setText(
-        this.brainNodeCount,
-        `${leader.genome.nodes.length} NODES`,
-      );
-      this.setText(
-        this.brainLinkCount,
-        `${leader.substrate.connections.length} SYNAPSES`,
-      );
+      this.setText(this.brainLinkCount, `${leader.substrate.connections.length} LINKS`);
       this.setText(this.hiddenNodes, String(leader.substrate.stats.hidden));
       this.setText(this.synapseCount, String(leader.substrate.stats.enabled));
 
@@ -326,140 +343,421 @@ export class Dashboard {
     this.lastBrainDraw = now;
     const leader = evolution.leader;
     if (!leader) return;
-    this.drawBrain(leader, now / 1000);
+    const traceKey = `${evolution.generation}:${leader.id}`;
+    this.drawBrain(leader, now / 1000, traceKey);
   }
 
-  drawBrain(agent, time) {
+  drawBrain(agent, time, traceKey) {
     const ctx = this.brainContext;
     const { width, height } = canvasSize(this.brainCanvas, ctx);
     ctx.clearRect(0, 0, width, height);
 
     const worm = agent.worm;
     const substrate = agent.substrate;
-    const cx = width * 0.5;
-    const cy = height * 0.52;
-    const sx = width * 0.34;
-    const sy = height * 0.31;
+    const layerTop = 9;
+    const networkTop = 20;
+    const traceTop = height - 31;
+    const networkBottom = traceTop - 8;
+    const inputX = width * 0.19;
+    const outputX = width * 0.85;
+    const groupGap = Math.max(2, height * 0.012);
+    const inputLayout = substrate.inputLayout;
+    const inputGapAfter = new Set();
+    for (let index = 1; index < inputLayout.length; index += 1) {
+      const previousKind = inputLayout[index - 1].kind;
+      const kind = inputLayout[index].kind;
+      if (kind !== previousKind && !(previousKind === 'energy' && kind === 'bias')) {
+        inputGapAfter.add(index - 1);
+      }
+    }
+    const rowHeight =
+      (networkBottom - networkTop - groupGap * inputGapAfter.size) /
+      inputLayout.length;
+    const inputLabelFont = `600 ${Math.max(
+      5.8,
+      Math.min(8.4, rowHeight * 0.92),
+    ).toFixed(1)}px "JetBrains Mono Variable", monospace`;
+    const inputY = [];
+    let cursor = networkTop + rowHeight * 0.5;
+    for (let index = 0; index < inputLayout.length; index += 1) {
+      inputY.push(cursor);
+      cursor += rowHeight;
+      if (inputGapAfter.has(index)) cursor += groupGap;
+    }
+    const hiddenCount = substrate.hiddenLayout.length;
+    const hiddenDepth = substrate.hiddenDepth;
+    const hiddenLeft = inputX + 24;
+    const hiddenRight = outputX - 58;
+    const hiddenColumnX =
+      hiddenDepth === 1
+        ? [(hiddenLeft + hiddenRight) * 0.5]
+        : Array.from(
+            { length: hiddenDepth },
+            (_, layer) =>
+              hiddenLeft + (layer / (hiddenDepth - 1)) * (hiddenRight - hiddenLeft),
+          );
+    const hiddenTop = networkTop + rowHeight * 0.5;
+    const hiddenBottom = networkBottom - rowHeight * 0.5;
+    const hiddenRowY = (row) =>
+      SUBSTRATE_LAYOUT.hiddenPerLayer === 1
+        ? (hiddenTop + hiddenBottom) * 0.5
+        : hiddenTop +
+          (row / (SUBSTRATE_LAYOUT.hiddenPerLayer - 1)) * (hiddenBottom - hiddenTop);
+    const outputY = [
+      networkTop + (networkBottom - networkTop) * 0.36,
+      networkTop + (networkBottom - networkTop) * 0.66,
+    ];
 
-    const project = (node) => ({
-      x: cx + node.x * sx,
-      y: cy - node.y * sy,
+    const inputs = inputLayout.map((node, index) => {
+      const value = worm.sensorValues[index] ?? 0;
+      return {
+        ...node,
+        index,
+        point: { x: inputX, y: inputY[index] },
+        value,
+        color: inputColor(node.kind),
+        displayLabel: node.kind === 'bias' ? 'BIAS' : node.label,
+      };
     });
-
-    const inputs = substrate.inputLayout.map((node, index) => ({
-      ...node,
-      index,
-      point: project(node),
-      value: worm.sensorValues[index] ?? 0,
-    }));
-    const hidden = substrate.hiddenLayout.map((node, index) => ({
-      ...node,
-      index,
-      point: project(node),
-      value: worm.activations.hidden[index] ?? 0,
-    }));
+    const hidden = substrate.hiddenLayout.map((node, index) => {
+      const value = worm.activations.hidden[index] ?? 0;
+      return {
+        ...node,
+        index,
+        point: { x: hiddenColumnX[node.layer], y: hiddenRowY(node.row) },
+        value,
+        color: value >= 0 ? '#69efd1' : '#ff7fa6',
+      };
+    });
     const outputs = substrate.outputLayout.map((node, index) => ({
       ...node,
       index,
-      point: project(node),
+      point: { x: outputX, y: outputY[index] },
       value: worm.activations.outputs[index] ?? 0,
+      displayValue: index === 0 ? worm.outputs.turn : worm.outputs.thrust,
+      color: index === 0 ? '#69efd1' : '#c8ff6d',
     }));
 
-    const clock = time;
+    const connections = substrate.connections.map((connection, order) => {
+      const source =
+        connection.fromKind === 'input'
+          ? inputs[connection.from]
+          : hidden[connection.from];
+      const target =
+        connection.toKind === 'hidden'
+          ? hidden[connection.to]
+          : outputs[connection.to];
+      return {
+        ...connection,
+        source,
+        target,
+        order,
+        signal: source && target ? Math.abs(source.value * connection.weight) : 0,
+      };
+    }).filter((connection) => connection.source && connection.target);
+
+    let maxSignal = 0.001;
+    for (const connection of connections) {
+      if (connection.signal > maxSignal) maxSignal = connection.signal;
+    }
+    const activeConnections = connections.filter((connection) => connection.signal > 0.02);
+    const meanHidden = hidden.length
+      ? hidden.reduce((total, node) => total + Math.abs(node.value), 0) / hidden.length
+      : 0;
+
+    ctx.save();
+    ctx.strokeStyle = 'rgba(151, 255, 201, 0.06)';
+    ctx.lineWidth = 1;
+    for (const index of inputGapAfter) {
+      const separatorY = inputY[index] + rowHeight * 0.5 + groupGap * 0.5;
+      ctx.beginPath();
+      ctx.moveTo(4, separatorY);
+      ctx.lineTo(inputX + 8, separatorY);
+      ctx.stroke();
+    }
+    ctx.restore();
 
     ctx.save();
     ctx.globalCompositeOperation = 'lighter';
-    const sorted = [...substrate.connections].sort(
-      (a, b) => Math.abs(a.weight) - Math.abs(b.weight),
-    );
-    const shownConnections = sorted.slice(-68);
-
-    for (const connection of shownConnections) {
-      const source =
-        connection.fromKind === 'input'
-          ? inputs[connection.from]
-          : hidden[connection.from];
-      const target =
-        connection.toKind === 'hidden'
-          ? hidden[connection.to]
-          : outputs[connection.to];
-      if (!source || !target) continue;
-      const strength = Math.abs(connection.weight);
-      const active = 0.4 + source.value * 0.6;
-      const positive = connection.weight >= 0;
-      ctx.strokeStyle = positive
-        ? `rgba(105, 239, 209, ${Math.min(0.34, 0.045 + strength * 0.07) * active})`
-        : `rgba(255, 110, 155, ${Math.min(0.3, 0.04 + strength * 0.06) * active})`;
-      ctx.lineWidth = 0.35 + Math.min(1.2, strength * 0.32);
+    ctx.lineWidth = 0.4;
+    for (const connection of connections) {
+      ctx.strokeStyle =
+        connection.weight >= 0
+          ? 'rgba(105, 239, 209, 0.028)'
+          : 'rgba(255, 110, 155, 0.026)';
       ctx.beginPath();
-      ctx.moveTo(source.point.x, source.point.y);
-      ctx.lineTo(target.point.x, target.point.y);
+      ctx.moveTo(connection.source.point.x, connection.source.point.y);
+      ctx.lineTo(connection.target.point.x, connection.target.point.y);
       ctx.stroke();
     }
 
-    const pulseCandidates = shownConnections
-      .filter((connection) => Math.abs(connection.weight) > 0.5)
-      .slice(-16);
-    pulseCandidates.forEach((connection, index) => {
-      const source =
-        connection.fromKind === 'input'
-          ? inputs[connection.from]
-          : hidden[connection.from];
-      const target =
-        connection.toKind === 'hidden'
-          ? hidden[connection.to]
-          : outputs[connection.to];
-      if (!source || !target) return;
-      const phase = (clock * 0.34 + index * 0.12) % 1;
-      const px = source.point.x + (target.point.x - source.point.x) * phase;
-      const py = source.point.y + (target.point.y - source.point.y) * phase;
-      const alpha = Math.sin(phase * Math.PI) * 0.62;
+    const litConnections = [...activeConnections]
+      .sort((a, b) => a.signal - b.signal)
+      .slice(-46);
+    for (const connection of litConnections) {
+      const normalized = Math.min(1, connection.signal / maxSignal);
+      const alpha = 0.035 + normalized ** 0.7 * 0.23;
+      ctx.strokeStyle =
+        connection.weight >= 0
+          ? `rgba(105, 239, 209, ${alpha})`
+          : `rgba(255, 110, 155, ${alpha * 0.9})`;
+      ctx.lineWidth = 0.45 + normalized * 1.15;
+      ctx.beginPath();
+      ctx.moveTo(connection.source.point.x, connection.source.point.y);
+      ctx.lineTo(connection.target.point.x, connection.target.point.y);
+      ctx.stroke();
+    }
+
+    const pulsingConnections = [...activeConnections]
+      .sort((a, b) => a.signal - b.signal)
+      .slice(-14);
+    for (const connection of pulsingConnections) {
+      const normalized = Math.min(1, connection.signal / maxSignal);
+      const phase =
+        (time * (0.22 + normalized * 0.52) + connection.order * 0.137) % 1;
+      const px =
+        connection.source.point.x +
+        (connection.target.point.x - connection.source.point.x) * phase;
+      const py =
+        connection.source.point.y +
+        (connection.target.point.y - connection.source.point.y) * phase;
+      const alpha = Math.sin(phase * Math.PI) * (0.12 + normalized * 0.62);
       ctx.fillStyle =
         connection.weight >= 0
-          ? `rgba(154, 255, 223, ${alpha})`
+          ? `rgba(174, 255, 226, ${alpha})`
           : `rgba(255, 154, 183, ${alpha})`;
       ctx.beginPath();
-      ctx.arc(px, py, 1.1 + Math.abs(connection.weight) * 0.35, 0, Math.PI * 2);
+      ctx.arc(px, py, 0.9 + normalized * 1.25, 0, Math.PI * 2);
       ctx.fill();
-    });
+    }
     ctx.restore();
 
+    this.drawLabel(
+      ctx,
+      `SENSE ${inputLayout.length}`,
+      4,
+      layerTop,
+      'rgba(137, 177, 157, 0.72)',
+      'left',
+      '600 7.6px "JetBrains Mono Variable", monospace',
+    );
+    const candidateCount = substrate.hiddenCandidates.length;
+    this.drawLabel(
+      ctx,
+      candidateCount > 0
+        ? `HIDDEN ${hiddenDepth}L · ${hiddenCount}/${candidateCount}`
+        : 'HIDDEN 0L',
+      hiddenLeft - 2,
+      layerTop,
+      'rgba(137, 177, 157, 0.72)',
+      'left',
+      '600 7.6px "JetBrains Mono Variable", monospace',
+    );
+    for (let layer = 0; layer < hiddenDepth; layer += 1) {
+      const count = substrate.hiddenLayers[layer]?.length ?? 0;
+      this.drawLabel(
+        ctx,
+        `L${layer + 1}·${count}`,
+        hiddenColumnX[layer],
+        networkTop - 3,
+        count > 0 ? 'rgba(105, 239, 209, 0.58)' : 'rgba(105, 239, 209, 0.24)',
+        'center',
+        '600 6.5px "JetBrains Mono Variable", monospace',
+      );
+    }
+    this.drawLabel(
+      ctx,
+      'MOTOR 2',
+      outputX - 18,
+      layerTop,
+      'rgba(137, 177, 157, 0.72)',
+      'left',
+      '600 7.6px "JetBrains Mono Variable", monospace',
+    );
+
     for (const input of inputs) {
-      const color =
-        input.kind === 'food'
-          ? foodColor()
-          : input.kind === 'hazard'
-            ? hazardColor()
-            : input.kind === 'energy'
-              ? '#ffc96b'
-              : '#85a99a';
-      const radius = 2.1 + Math.min(2.4, input.value * 2.4);
-      this.drawNode(ctx, input.point.x, input.point.y, radius, color, 0.3 + input.value * 0.7);
-      if (input.kind === 'food' && [0, 2, 4, 6].includes(input.index)) {
-        this.drawLabel(ctx, input.label, input.point.x, input.point.y - 7, 'rgba(194, 232, 207, 0.54)');
-      } else if (input.kind === 'energy') {
-        this.drawLabel(ctx, 'E', input.point.x + 6, input.point.y, 'rgba(255, 201, 107, 0.68)');
-      } else if (input.kind === 'bias') {
-        this.drawLabel(ctx, 'B', input.point.x + 6, input.point.y, 'rgba(133, 169, 154, 0.5)');
-      }
+      const value = Math.max(0, Math.min(1, input.value));
+      this.drawLabel(
+        ctx,
+        input.displayLabel,
+        4,
+        input.point.y,
+        withAlpha(input.color, 0.56 + value * 0.38),
+        'left',
+        inputLabelFont,
+      );
+      this.drawNode(
+        ctx,
+        input.point.x,
+        input.point.y,
+        2 + value * 2.5,
+        input.color,
+        0.3 + value * 0.62,
+      );
     }
 
     for (const node of hidden) {
-      const radius = 2.35 + Math.min(2.1, Math.abs(node.value) * 2.1);
-      this.drawNode(ctx, node.point.x, node.point.y, radius, '#69efd1', 0.45);
+      const intensity = Math.min(1, Math.abs(node.value));
+      this.drawNode(
+        ctx,
+        node.point.x,
+        node.point.y,
+        2.6 + intensity * 2.4,
+        node.color,
+        0.36 + intensity * 0.52,
+      );
+      this.drawLabel(
+        ctx,
+        formatSigned(node.value),
+        node.point.x + 8,
+        node.point.y,
+        withAlpha(node.color, 0.6 + intensity * 0.34),
+        'left',
+        '600 8.8px "JetBrains Mono Variable", monospace',
+      );
     }
 
     for (const output of outputs) {
-      this.drawNode(ctx, output.point.x, output.point.y, 4, '#c8ff6d', 0.78);
+      const magnitude = Math.min(1, Math.abs(Math.tanh(output.value)));
+      const radius = 4.4 + magnitude * 2.2;
+      this.drawNode(ctx, output.point.x, output.point.y, radius, output.color, 0.75);
+      ctx.save();
+      ctx.strokeStyle = withAlpha(output.color, 0.26 + magnitude * 0.24);
+      ctx.lineWidth = 0.9;
+      ctx.beginPath();
+      ctx.arc(output.point.x, output.point.y, radius + 2.4, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
       this.drawLabel(
         ctx,
         output.label,
         output.point.x,
-        output.point.y + 11,
-        'rgba(216, 247, 216, 0.72)',
+        output.point.y - 10,
+        withAlpha(output.color, 0.72),
         'center',
+        '600 7.8px "JetBrains Mono Variable", monospace',
+      );
+      this.drawLabel(
+        ctx,
+        output.index === 0 ? formatSigned(output.displayValue) : formatFraction(output.displayValue),
+        output.point.x,
+        output.point.y + 11,
+        output.color,
+        'center',
+        '600 9.6px "JetBrains Mono Variable", monospace',
       );
     }
+
+    if (this.brainTrace.key !== traceKey) {
+      this.brainTrace = { key: traceKey, turn: [], thrust: [] };
+    }
+    this.brainTrace.turn.push(worm.outputs.turn);
+    this.brainTrace.thrust.push(worm.outputs.thrust);
+    if (this.brainTrace.turn.length > 72) this.brainTrace.turn.shift();
+    if (this.brainTrace.thrust.length > 72) this.brainTrace.thrust.shift();
+
+    const traceLeft = 38;
+    const traceWidth = width - traceLeft - 4;
+    const turnLaneY = traceTop + 8;
+    const thrustLaneY = traceTop + 20;
+    ctx.save();
+    ctx.strokeStyle = 'rgba(151, 255, 201, 0.09)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(4, traceTop - 3);
+    ctx.lineTo(width - 4, traceTop - 3);
+    ctx.stroke();
+    ctx.setLineDash([2, 3]);
+    ctx.strokeStyle = 'rgba(151, 255, 201, 0.12)';
+    ctx.beginPath();
+    ctx.moveTo(traceLeft, turnLaneY);
+    ctx.lineTo(width - 4, turnLaneY);
+    ctx.moveTo(traceLeft, thrustLaneY + 3);
+    ctx.lineTo(width - 4, thrustLaneY + 3);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    this.drawLabel(
+      ctx,
+      'TURN',
+      4,
+      turnLaneY,
+      'rgba(105, 239, 209, 0.78)',
+      'left',
+      '600 7.4px "JetBrains Mono Variable", monospace',
+    );
+    this.drawLabel(
+      ctx,
+      'THRUST',
+      4,
+      thrustLaneY,
+      'rgba(200, 255, 109, 0.76)',
+      'left',
+      '600 7.4px "JetBrains Mono Variable", monospace',
+    );
+
+    const drawTrace = (values, yFor, color) => {
+      if (!values.length) return;
+      ctx.beginPath();
+      values.forEach((value, index) => {
+        const x =
+          traceLeft + (index / Math.max(1, values.length - 1)) * traceWidth;
+        const y = yFor(value);
+        if (index === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      });
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 1;
+      ctx.shadowColor = color;
+      ctx.shadowBlur = 4;
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+      const lastX =
+        traceLeft +
+        ((values.length - 1) / Math.max(1, values.length - 1)) * traceWidth;
+      const lastY = yFor(values[values.length - 1]);
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.arc(lastX, lastY, 1.5, 0, Math.PI * 2);
+      ctx.fill();
+    };
+    drawTrace(
+      this.brainTrace.turn,
+      (value) => turnLaneY - Math.max(-1, Math.min(1, value)) * 3.3,
+      'rgba(105, 239, 209, 0.78)',
+    );
+    drawTrace(
+      this.brainTrace.thrust,
+      (value) => thrustLaneY + 3 - Math.max(0, Math.min(1, value)) * 5.6,
+      'rgba(200, 255, 109, 0.74)',
+    );
+    ctx.restore();
+
+    const dominant = inputs
+      .filter((input) =>
+        ['food', 'hazard', 'worm', 'chomper'].includes(input.kind),
+      )
+      .reduce((best, input) => (input.value > best.value ? input : best));
+    this.setText(this.brainDominant, dominant.label);
+    this.setText(this.brainDominantValue, formatFraction(dominant.value));
+    this.brainDominant.style.color = dominant.value > 0.01 ? dominant.color : '';
+    this.setText(this.brainHiddenMean, formatFraction(meanHidden));
+    this.setText(this.brainActiveLinks, String(activeConnections.length));
+    this.setText(this.brainTotalLinks, `/${connections.length}`);
+    this.setText(
+      this.brainArchitecture,
+      hiddenDepth > 0
+        ? `${inputLayout.length} → ${hiddenDepth}L · ${hiddenCount}H → 2`
+        : `${inputLayout.length} → 0H → 2`,
+    );
+    this.brainArchitecture.title = `${substrate.stats.activeLayerCount} of ${hiddenDepth} hidden layers populated`;
+    this.brainCanvas.setAttribute(
+      'aria-label',
+      `Live substrate. ${hiddenDepth} hidden layers, ${substrate.stats.activeLayerCount} populated. Strongest sensor ${dominant.label} at ${formatFraction(
+        dominant.value,
+      )}. ${hiddenCount} active hidden nodes across ${substrate.hiddenCandidates.length} candidates. Mean hidden activation ${formatFraction(
+        meanHidden,
+      )}. ${activeConnections.length} of ${connections.length} synapses active.`,
+    );
   }
 
   drawNode(ctx, x, y, radius, color, alpha) {
@@ -482,11 +780,23 @@ export class Dashboard {
     ctx.stroke();
   }
 
-  drawLabel(ctx, text, x, y, color, align = 'left') {
+  drawLabel(
+    ctx,
+    text,
+    x,
+    y,
+    color,
+    align = 'left',
+    font = '500 6.2px "JetBrains Mono Variable", monospace',
+  ) {
     ctx.save();
-    ctx.font = '500 6.2px "JetBrains Mono Variable", monospace';
+    ctx.font = font;
     ctx.textAlign = align;
     ctx.textBaseline = 'middle';
+    ctx.lineJoin = 'round';
+    ctx.strokeStyle = 'rgba(2, 9, 6, 0.82)';
+    ctx.lineWidth = 1.7;
+    ctx.strokeText(text, x, y);
     ctx.fillStyle = color;
     ctx.fillText(text, x, y);
     ctx.restore();

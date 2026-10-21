@@ -9,6 +9,19 @@ const COLORS = {
   food: '#b9ff68',
   hazard: '#ff5f8f',
   ink: '#04110d',
+  chomper: '#ff9168',
+};
+
+const CHOMPER_COLORS = {
+  body: '#ff9168',
+  belly: '#ffd39a',
+  fin: '#ffbd68',
+  outline: '#260f12',
+  eye: '#fff6dc',
+  pupil: '#15251d',
+  mouth: '#3e1219',
+  tooth: '#fff1c9',
+  cheek: '#ff6f86',
 };
 
 function makeCanvas(size = 128) {
@@ -109,6 +122,88 @@ function makeHazardTexture() {
   const texture = new THREE.CanvasTexture(canvas);
   texture.colorSpace = THREE.SRGBColorSpace;
   return texture;
+}
+
+function roundedRect(ctx, x, y, width, height, radius) {
+  const corner = Math.min(radius, width * 0.5, height * 0.5);
+  ctx.beginPath();
+  ctx.moveTo(x + corner, y);
+  ctx.lineTo(x + width - corner, y);
+  ctx.quadraticCurveTo(x + width, y, x + width, y + corner);
+  ctx.lineTo(x + width, y + height - corner);
+  ctx.quadraticCurveTo(x + width, y + height, x + width - corner, y + height);
+  ctx.lineTo(x + corner, y + height);
+  ctx.quadraticCurveTo(x, y + height, x, y + height - corner);
+  ctx.lineTo(x, y + corner);
+  ctx.quadraticCurveTo(x, y, x + corner, y);
+  ctx.closePath();
+}
+
+function makeChompBubbleTexture() {
+  const { canvas, ctx } = makeCanvas(256);
+  canvas.height = 96;
+  ctx.clearRect(0, 0, 256, 96);
+  ctx.save();
+  ctx.shadowColor = 'rgba(0,0,0,0.45)';
+  ctx.shadowBlur = 12;
+  roundedRect(ctx, 17, 9, 222, 69, 21);
+  ctx.fillStyle = '#ffe8b6';
+  ctx.fill();
+  ctx.shadowBlur = 0;
+  ctx.lineWidth = 5;
+  ctx.strokeStyle = '#ff9168';
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(80, 76);
+  ctx.lineTo(72, 91);
+  ctx.lineTo(105, 77);
+  ctx.closePath();
+  ctx.fillStyle = '#ffe8b6';
+  ctx.fill();
+  ctx.lineWidth = 4;
+  ctx.strokeStyle = '#ff9168';
+  ctx.stroke();
+  ctx.font = '900 39px "Arial Black", "Trebuchet MS", sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.lineWidth = 6;
+  ctx.lineJoin = 'round';
+  ctx.strokeStyle = '#5c2020';
+  ctx.strokeText('CHOMP!', 128, 45);
+  ctx.fillStyle = '#ff795d';
+  ctx.fillText('CHOMP!', 128, 45);
+  ctx.restore();
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.minFilter = THREE.LinearFilter;
+  texture.magFilter = THREE.LinearFilter;
+  return texture;
+}
+
+function makeToothGeometry() {
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute(
+    'position',
+    new THREE.BufferAttribute(
+      new Float32Array([-0.72, 0.82, 0, 0.72, 0.82, 0, 0, -0.95, 0]),
+      3,
+    ),
+  );
+  geometry.setIndex([0, 1, 2]);
+  return geometry;
+}
+
+function makeFinGeometry() {
+  const geometry = new THREE.BufferGeometry();
+  geometry.setAttribute(
+    'position',
+    new THREE.BufferAttribute(
+      new Float32Array([0, 0, 0, -1, 0.72, 0, -1, -0.72, 0]),
+      3,
+    ),
+  );
+  geometry.setIndex([0, 1, 2]);
+  return geometry;
 }
 
 function circleGeometry(radius = 1, segments = 24) {
@@ -476,6 +571,259 @@ class WormVisual {
   }
 }
 
+class ChomperVisual {
+  constructor(chomper, settings, shared) {
+    this.chomper = chomper;
+    this.settings = settings;
+    this.shared = shared;
+    this.radius = settings.radius;
+    this.chompDuration = settings.chompDuration || 0.42;
+
+    const group = new THREE.Group();
+    const rig = new THREE.Group();
+    const bodyGroup = new THREE.Group();
+    this.group = group;
+    this.rig = rig;
+    this.bodyGroup = bodyGroup;
+    group.add(rig);
+    rig.add(bodyGroup);
+
+    this.glowMaterial = new THREE.SpriteMaterial({
+      map: shared.chomperGlowTexture,
+      color: COLORS.chomper,
+      transparent: true,
+      opacity: 0.2,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+      depthTest: false,
+    });
+    this.glow = new THREE.Sprite(this.glowMaterial);
+    this.glow.scale.setScalar(this.radius * 4.2);
+    this.glow.renderOrder = 17;
+    group.add(this.glow);
+
+    this.outlineMaterial = new THREE.MeshBasicMaterial({
+      color: CHOMPER_COLORS.outline,
+      transparent: true,
+      depthWrite: false,
+      depthTest: false,
+      side: THREE.DoubleSide,
+    });
+    this.outline = new THREE.Mesh(shared.chomperRingGeometry, this.outlineMaterial);
+    this.outline.scale.setScalar(this.radius * 1.18);
+    this.outline.position.z = -0.02;
+    this.outline.renderOrder = 25;
+    bodyGroup.add(this.outline);
+
+    this.bodyMaterial = new THREE.MeshBasicMaterial({
+      color: CHOMPER_COLORS.body,
+      transparent: true,
+      depthWrite: false,
+      depthTest: false,
+    });
+    this.body = new THREE.Mesh(shared.chomperBodyGeometry, this.bodyMaterial);
+    this.body.scale.setScalar(this.radius);
+    this.body.renderOrder = 26;
+    bodyGroup.add(this.body);
+
+    this.bellyMaterial = new THREE.MeshBasicMaterial({
+      color: CHOMPER_COLORS.belly,
+      transparent: true,
+      opacity: 0.88,
+      depthWrite: false,
+      depthTest: false,
+    });
+    this.belly = new THREE.Mesh(shared.chomperBodyGeometry, this.bellyMaterial);
+    this.belly.position.set(this.radius * 0.16, -this.radius * 0.06, 0.02);
+    this.belly.scale.setScalar(this.radius * 0.5);
+    this.belly.renderOrder = 27;
+    bodyGroup.add(this.belly);
+
+    this.finMaterial = new THREE.MeshBasicMaterial({
+      color: CHOMPER_COLORS.fin,
+      transparent: true,
+      depthWrite: false,
+      depthTest: false,
+      side: THREE.DoubleSide,
+    });
+    this.fin = new THREE.Mesh(shared.chomperFinGeometry, this.finMaterial);
+    this.fin.position.set(-this.radius * 0.74, 0, -0.03);
+    this.fin.scale.set(this.radius * 0.6, this.radius * 0.6, 1);
+    this.fin.renderOrder = 24;
+    bodyGroup.add(this.fin);
+
+    this.cheekMaterial = new THREE.MeshBasicMaterial({
+      color: CHOMPER_COLORS.cheek,
+      transparent: true,
+      opacity: 0.48,
+      depthWrite: false,
+      depthTest: false,
+    });
+    this.cheekLeft = new THREE.Mesh(shared.chomperEyeGeometry, this.cheekMaterial);
+    this.cheekRight = new THREE.Mesh(shared.chomperEyeGeometry, this.cheekMaterial);
+    this.cheekLeft.position.set(this.radius * 0.18, -this.radius * 0.7, 0.03);
+    this.cheekRight.position.set(this.radius * 0.18, this.radius * 0.7, 0.03);
+    this.cheekLeft.scale.setScalar(2.2);
+    this.cheekRight.scale.setScalar(2.2);
+    this.cheekLeft.renderOrder = 28;
+    this.cheekRight.renderOrder = 28;
+    rig.add(this.cheekLeft, this.cheekRight);
+
+    this.eyeWhiteMaterial = new THREE.MeshBasicMaterial({
+      color: CHOMPER_COLORS.eye,
+      transparent: true,
+      depthWrite: false,
+      depthTest: false,
+    });
+    this.pupilMaterial = new THREE.MeshBasicMaterial({
+      color: CHOMPER_COLORS.pupil,
+      transparent: true,
+      depthWrite: false,
+      depthTest: false,
+    });
+
+    const eyeX = this.radius * 0.36;
+    const eyeY = this.radius * 0.46;
+    this.eyeLeft = new THREE.Group();
+    this.eyeRight = new THREE.Group();
+    this.eyeLeft.position.set(eyeX, eyeY, 0.1);
+    this.eyeRight.position.set(eyeX, -eyeY, 0.1);
+    this.eyeWhiteLeft = new THREE.Mesh(shared.chomperEyeGeometry, this.eyeWhiteMaterial);
+    this.eyeWhiteRight = new THREE.Mesh(shared.chomperEyeGeometry, this.eyeWhiteMaterial);
+    this.eyeWhiteLeft.scale.setScalar(5.2);
+    this.eyeWhiteRight.scale.setScalar(5.2);
+    this.eyeWhiteLeft.renderOrder = 29;
+    this.eyeWhiteRight.renderOrder = 29;
+    this.pupilLeft = new THREE.Mesh(shared.chomperPupilGeometry, this.pupilMaterial);
+    this.pupilRight = new THREE.Mesh(shared.chomperPupilGeometry, this.pupilMaterial);
+    this.pupilLeft.scale.setScalar(2.5);
+    this.pupilRight.scale.setScalar(2.5);
+    this.pupilLeft.position.z = 0.06;
+    this.pupilRight.position.z = 0.06;
+    this.pupilLeft.renderOrder = 30;
+    this.pupilRight.renderOrder = 30;
+    this.eyeLeft.add(this.eyeWhiteLeft, this.pupilLeft);
+    this.eyeRight.add(this.eyeWhiteRight, this.pupilRight);
+    rig.add(this.eyeLeft, this.eyeRight);
+
+    this.mouthAssembly = new THREE.Group();
+    this.mouthAssembly.position.set(this.radius * 0.58, 0, 0.08);
+    this.mouthMaterial = new THREE.MeshBasicMaterial({
+      color: CHOMPER_COLORS.mouth,
+      transparent: true,
+      depthWrite: false,
+      depthTest: false,
+    });
+    this.mouth = new THREE.Mesh(shared.chomperMouthGeometry, this.mouthMaterial);
+    this.mouth.scale.setScalar(5.2);
+    this.mouth.renderOrder = 31;
+    this.mouthAssembly.add(this.mouth);
+
+    this.toothMaterial = new THREE.MeshBasicMaterial({
+      color: CHOMPER_COLORS.tooth,
+      transparent: true,
+      depthWrite: false,
+      depthTest: false,
+      side: THREE.DoubleSide,
+    });
+    this.teeth = new THREE.Group();
+    const toothCount = 7;
+    for (let index = 0; index < toothCount; index += 1) {
+      const angle = (index / toothCount) * Math.PI * 2 + 0.22;
+      const tooth = new THREE.Mesh(shared.chomperToothGeometry, this.toothMaterial);
+      tooth.position.set(Math.cos(angle) * 3.35, Math.sin(angle) * 3.35, 0.04);
+      tooth.rotation.z = angle - Math.PI / 2;
+      tooth.scale.set(0.7, 0.8, 1);
+      tooth.renderOrder = 32;
+      this.teeth.add(tooth);
+    }
+    this.mouthAssembly.add(this.teeth);
+    rig.add(this.mouthAssembly);
+
+    this.bubbleMaterial = new THREE.SpriteMaterial({
+      map: shared.chompBubbleTexture,
+      transparent: true,
+      opacity: 0,
+      depthWrite: false,
+      depthTest: false,
+    });
+    this.bubble = new THREE.Sprite(this.bubbleMaterial);
+    this.bubble.scale.set(70, 26, 1);
+    this.bubble.position.set(0, this.radius * 2.1, 4);
+    this.bubble.renderOrder = 40;
+    this.bubble.visible = false;
+    group.add(this.bubble);
+  }
+
+  update(time) {
+    const chomper = this.chomper;
+    const settings = this.settings;
+    const bob = Math.sin(time * 3.2 + chomper.phase) * 1.4;
+    this.group.position.set(chomper.x, chomper.y + bob, 0);
+    this.rig.rotation.z = chomper.heading;
+
+    const chompProgress =
+      chomper.chompTimer > 0
+        ? 1 - chomper.chompTimer / this.chompDuration
+        : 0;
+    const chomp =
+      chomper.chompTimer > 0
+        ? Math.sin(Math.min(1, chompProgress) * Math.PI)
+        : 0;
+    const open = Math.max(chomper.mouthOpen * 0.82, chomp);
+    const excitement = chomper.excitement;
+
+    const wobble = Math.sin(time * 4.6 + chomper.phase) * 0.022;
+    this.bodyGroup.scale.set(1 + chomp * 0.1 + wobble, 1 - chomp * 0.12 - wobble, 1);
+    this.mouthAssembly.scale.set(1, 0.55 + open * 0.82, 1);
+    this.fin.rotation.z = Math.sin(time * 7 + chomper.phase) * 0.24;
+
+    const eyeScale = 1 + excitement * 0.12 + chomp * 0.12;
+    this.eyeWhiteLeft.scale.setScalar(5.2 * eyeScale);
+    this.eyeWhiteRight.scale.setScalar(5.2 * eyeScale);
+    const lookAngle =
+      Math.atan2(chomper.targetY - chomper.y, chomper.targetX - chomper.x) -
+      chomper.heading +
+      Math.sin(time * 6 + chomper.phase) * 0.06;
+    const lookX = Math.cos(lookAngle) * (1.7 + excitement * 0.5);
+    const lookY = Math.sin(lookAngle) * (1.7 + excitement * 0.5);
+    this.pupilLeft.position.set(lookX, lookY, 0.06);
+    this.pupilRight.position.set(lookX, lookY, 0.06);
+    this.pupilLeft.scale.setScalar(2.5 * eyeScale);
+    this.pupilRight.scale.setScalar(2.5 * eyeScale);
+
+    this.cheekLeft.scale.setScalar(2.2 + chomp * 0.32);
+    this.cheekRight.scale.setScalar(2.2 + chomp * 0.32);
+    this.glow.scale.setScalar(
+      this.radius * 4.2 * (1 + excitement * 0.08 + chomp * 0.12),
+    );
+    this.glowMaterial.opacity = 0.17 + excitement * 0.08 + chomp * 0.07;
+
+    const bubbleVisible = chomper.chompTimer > 0.02;
+    this.bubble.visible = bubbleVisible;
+    if (bubbleVisible) {
+      const pop = 0.86 + chomp * 0.26;
+      this.bubble.scale.set(70 * pop, 26 * pop, 1);
+      this.bubble.position.y = this.radius * 2.1 + chompProgress * 7;
+      this.bubbleMaterial.opacity = Math.min(1, chomper.chompTimer * 5.2);
+    }
+  }
+
+  dispose() {
+    this.glowMaterial.dispose();
+    this.outlineMaterial.dispose();
+    this.bodyMaterial.dispose();
+    this.bellyMaterial.dispose();
+    this.finMaterial.dispose();
+    this.cheekMaterial.dispose();
+    this.eyeWhiteMaterial.dispose();
+    this.pupilMaterial.dispose();
+    this.mouthMaterial.dispose();
+    this.toothMaterial.dispose();
+    this.bubbleMaterial.dispose();
+  }
+}
+
 export class ArenaRenderer {
   constructor(host) {
     this.host = host;
@@ -484,7 +832,9 @@ export class ArenaRenderer {
     this.clockTime = 0;
     this.populationSource = null;
     this.ecologySource = null;
+    this.predatorSource = null;
     this.wormVisuals = [];
+    this.predatorVisuals = [];
     this.foodVisuals = [];
     this.hazardVisuals = [];
     this.events = [];
@@ -535,6 +885,20 @@ export class ArenaRenderer {
     );
     this.headGeometry = circleGeometry(1, 28);
     this.eyeGeometry = circleGeometry(1, 12);
+    this.chomperBodyGeometry = circleGeometry(1, 32);
+    this.chomperMouthGeometry = circleGeometry(1, 28);
+    this.chomperEyeGeometry = circleGeometry(1, 22);
+    this.chomperPupilGeometry = circleGeometry(1, 16);
+    this.chomperRingGeometry = new THREE.RingGeometry(0.9, 1.06, 42);
+    this.chomperToothGeometry = makeToothGeometry();
+    this.chomperFinGeometry = makeFinGeometry();
+    this.chomperGlowTexture = makeRadialTexture(
+      'rgba(255,255,255,1)',
+      'rgba(255,170,95,0.52)',
+      'rgba(255,80,80,0.04)',
+      64,
+    );
+    this.chompBubbleTexture = makeChompBubbleTexture();
     this.leaderGeometry = new THREE.RingGeometry(0.9, 1, 48);
     this.leaderMaterial = new THREE.MeshBasicMaterial({
       color: COLORS.acid,
@@ -587,6 +951,15 @@ export class ArenaRenderer {
       leaderGeometry: this.leaderGeometry,
       leaderMaterial: this.leaderMaterial,
       glowTexture: this.glowTexture,
+      chomperBodyGeometry: this.chomperBodyGeometry,
+      chomperMouthGeometry: this.chomperMouthGeometry,
+      chomperEyeGeometry: this.chomperEyeGeometry,
+      chomperPupilGeometry: this.chomperPupilGeometry,
+      chomperRingGeometry: this.chomperRingGeometry,
+      chomperToothGeometry: this.chomperToothGeometry,
+      chomperFinGeometry: this.chomperFinGeometry,
+      chomperGlowTexture: this.chomperGlowTexture,
+      chompBubbleTexture: this.chompBubbleTexture,
     };
   }
 
@@ -801,6 +1174,9 @@ export class ArenaRenderer {
         this.ring(event.x, event.y, event.color, 26, 0.6);
       } else if (event.type === 'hazard') {
         this.burst(event.x, event.y, COLORS.hazard, 2, 45, 0.35);
+      } else if (event.type === 'chomp') {
+        this.burst(event.x, event.y, COLORS.chomper, 9, 92, 0.52);
+        this.ring(event.x, event.y, COLORS.chomper, 24, 0.42);
       } else if (event.type === 'generation') {
         this.ring(WORLD.width * 0.5, WORLD.height * 0.5, event.color, 160, 1.2);
       }
@@ -911,6 +1287,20 @@ export class ArenaRenderer {
     this.populationSource = agents;
   }
 
+  syncPredators(predators, settings) {
+    if (this.predatorSource === predators) return;
+    for (const visual of this.predatorVisuals) {
+      this.scene.remove(visual.group);
+      visual.dispose();
+    }
+    this.predatorVisuals = predators.map((chomper) => {
+      const visual = new ChomperVisual(chomper, settings, this.shared);
+      this.scene.add(visual.group);
+      return visual;
+    });
+    this.predatorSource = predators;
+  }
+
   setLeader(agent) {
     this.leaderId = agent?.id ?? null;
   }
@@ -947,6 +1337,12 @@ export class ArenaRenderer {
 
     this.syncEnvironment(evolution.ecology);
     this.syncPopulation(evolution.agents);
+    if (evolution.predators) {
+      this.syncPredators(
+        evolution.predators.chompers,
+        evolution.predators.settings,
+      );
+    }
     this.setLeader(evolution.leader);
 
     this.updateEnvironmentAnimation();
@@ -954,6 +1350,9 @@ export class ArenaRenderer {
     this.updateParticles(safeDt);
     this.updateRings(safeDt);
 
+    for (const visual of this.predatorVisuals) {
+      visual.update(this.clockTime);
+    }
     for (const visual of this.wormVisuals) {
       visual.update(this.clockTime, safeDt, visual.agent.id === this.leaderId);
     }
@@ -1033,6 +1432,9 @@ export class ArenaRenderer {
 
   dispose() {
     this.resizeObserver.disconnect();
+    for (const visual of this.predatorVisuals) {
+      visual.dispose();
+    }
     this.renderer.dispose();
   }
 }

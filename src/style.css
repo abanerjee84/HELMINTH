@@ -823,7 +823,7 @@ button:focus-visible {
 .leader-metrics {
   display: grid;
   grid-column: 1 / -1;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: repeat(4, 1fr);
   gap: 5px;
   margin-top: 2px;
 }
@@ -1091,6 +1091,11 @@ button:focus-visible {
   box-shadow: 0 0 7px rgba(255, 110, 155, 0.6);
 }
 
+.chomper-swatch {
+  background: #ff9168;
+  box-shadow: 0 0 7px rgba(255, 145, 104, 0.68);
+}
+
 .crosshair {
   position: absolute;
   width: 13px;
@@ -1267,6 +1272,11 @@ button:focus-visible {
   background: var(--rose);
 }
 
+.legend-chomper {
+  background: #ff9168;
+  box-shadow: 0 0 7px rgba(255, 145, 104, 0.55);
+}
+
 .objective-tag {
   display: flex;
   flex-direction: column;
@@ -1298,12 +1308,12 @@ button:focus-visible {
 
 .brain-stage {
   position: relative;
-  height: 188px;
+  height: 260px;
   overflow: hidden;
   border: 1px solid rgba(153, 255, 199, 0.08);
   border-radius: 9px;
   background:
-    radial-gradient(circle at 50% 48%, rgba(50, 160, 116, 0.095), transparent 55%),
+    radial-gradient(circle at 50% 42%, rgba(50, 160, 116, 0.105), transparent 58%),
     rgba(2, 9, 6, 0.38);
 }
 
@@ -1325,31 +1335,58 @@ button:focus-visible {
   height: 100%;
 }
 
-.brain-axis {
-  position: absolute;
-  top: 50%;
+.brain-stats {
+  display: grid;
+  grid-template-columns: 1.08fr 1fr 1fr;
+  gap: 7px;
+  margin-top: 9px;
+}
+
+.brain-stat {
+  min-width: 0;
+  padding: 6px 7px 5px;
+  border: 1px solid rgba(153, 255, 199, 0.08);
+  border-radius: 6px;
+  background: rgba(4, 14, 10, 0.34);
+}
+
+.brain-stat > span {
+  display: block;
+  margin-bottom: 3px;
+  overflow: hidden;
   font-family: var(--mono);
-  font-size: 6px;
-  letter-spacing: 0.12em;
-  color: var(--faint);
-  writing-mode: vertical-rl;
-  transform: translateY(-50%);
+  font-size: 8.2px;
+  letter-spacing: 0.05em;
+  color: #7c998a;
+  white-space: nowrap;
 }
 
-.brain-axis-left {
-  left: 6px;
-  transform: translateY(-50%) rotate(180deg);
+.brain-stat strong {
+  display: flex;
+  align-items: baseline;
+  gap: 3px;
+  font-family: var(--mono);
+  font-weight: 400;
+  color: #d6eadf;
 }
 
-.brain-axis-right {
-  right: 6px;
+.brain-stat strong em {
+  font-size: 9.5px;
+  font-style: normal;
+  color: var(--aqua);
+}
+
+.brain-stat strong b {
+  font-size: 14px;
+  font-weight: 500;
+  color: #dcf4e6;
 }
 
 .output-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
-  margin-top: 10px;
+  margin-top: 9px;
 }
 
 .output-label {
@@ -1361,22 +1398,22 @@ button:focus-visible {
 
 .output-label span {
   font-family: var(--mono);
-  font-size: 7px;
+  font-size: 8.5px;
   letter-spacing: 0.1em;
-  color: var(--faint);
+  color: #7c998a;
 }
 
 .output-label b {
   font-family: var(--mono);
-  font-size: 8.5px;
-  font-weight: 400;
+  font-size: 13.5px;
+  font-weight: 500;
   color: var(--aqua);
 }
 
 .dual-meter,
 .linear-meter {
   position: relative;
-  height: 3px;
+  height: 4px;
   overflow: hidden;
   border-radius: 3px;
   background: rgba(177, 255, 206, 0.08);
@@ -1422,9 +1459,14 @@ button:focus-visible {
   gap: 10px;
   margin-top: 9px;
   font-family: var(--mono);
-  font-size: 6.5px;
-  letter-spacing: 0.04em;
-  color: var(--faint);
+  font-size: 7.6px;
+  letter-spacing: 0.03em;
+  color: #6f8c7d;
+  white-space: nowrap;
+}
+
+.brain-foot span:first-child {
+  color: #9ab9a8;
 }
 
 .brain-foot span:last-child {
@@ -1602,7 +1644,7 @@ button:focus-visible {
   }
 
   .brain-stage {
-    height: 162px;
+    height: 236px;
   }
 
   .method-copy p {
@@ -1633,6 +1675,10 @@ button:focus-visible {
 @media (max-width: 1280px) {
   .workspace {
     grid-template-columns: 272px minmax(0, 1fr) 292px;
+  }
+
+  .brain-stage {
+    height: 202px;
   }
 
   .tech-readout {

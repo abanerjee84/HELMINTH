@@ -69,9 +69,9 @@
             <div class="panel-kicker"><span>01</span> SELECTION ENGINE</div>
             <h2>Teach a worm<br /><em>to want tomorrow.</em></h2>
             <p class="lede">
-              A population of blind neural worms forages a toxic biotope. Their
-              CPPN genomes are scored on nutrients, endurance and hazard
-              avoidance.
+              A population of neural worms reads food, rival and chomper cues
+              while dodging three tiny, hungry chompers. Genomes are scored on
+              nutrients, endurance, progress and hazard avoidance.
             </p>
 
             <button
@@ -177,7 +177,7 @@
                   <strong id="leaderName">WORM 00</strong>
                   <span class="leader-tag">LEADER</span>
                 </div>
-                <span id="leaderGenome">CPPN 6 · 3 · 1</span>
+                <span id="leaderGenome">CPPN 6 · 3 · 2</span>
               </div>
               <div class="leader-score">
                 <span>FITNESS</span>
@@ -185,6 +185,7 @@
               </div>
               <div class="leader-metrics">
                 <div><span>NUTRIENTS</span><b id="leaderFood">0</b></div>
+                <div title="Net forward progress from spawn"><span>FORWARD</span><b id="leaderForward">0</b></div>
                 <div><span>LIFESPAN</span><b id="leaderTime">0s</b></div>
                 <div><span>ENERGY</span><b id="leaderEnergy">0%</b></div>
               </div>
@@ -206,6 +207,7 @@
               <div class="condition-tags">
                 <span><i class="food-swatch"></i>NUTRIENT BLOOM</span>
                 <span><i class="toxin-swatch"></i>TOXIC POCKET</span>
+                <span><i class="chomper-swatch"></i>CHOMPER PATROL</span>
               </div>
             </div>
 
@@ -216,8 +218,8 @@
 
             <div class="idle-prompt" id="idlePrompt">
               <span>SIMULATION READY</span>
-              <strong>28 blind worms. One nutrient field.</strong>
-              <p>Press start to let selection find a nervous system that can survive.</p>
+              <strong>28 sensory worms. Three tiny chompers.</strong>
+              <p>Press start to see which nervous systems can out-forage and out-swim.</p>
             </div>
 
             <div class="generation-toast" id="generationToast">
@@ -231,6 +233,7 @@
                 <span><i class="legend-worm"></i>NEURAL WORM</span>
                 <span><i class="legend-food"></i>NUTRIENT</span>
                 <span><i class="legend-toxin"></i>TOXIC BLOOM</span>
+                <span><i class="legend-chomper"></i>CHOMPER</span>
               </div>
               <div class="objective-tag">
                 <span>SELECTION OBJECTIVE</span>
@@ -244,12 +247,24 @@
           <section class="panel brain-panel">
             <div class="section-heading">
               <span>04 / SUBSTRATE ACTIVITY</span>
-              <strong id="cppnSignature">CPPN 6 · 3 · 1</strong>
+              <strong id="cppnSignature">CPPN 6 · 3 · 2</strong>
             </div>
             <div class="brain-stage">
               <canvas id="brainCanvas" aria-label="Live HyperNEAT neural substrate visualization"></canvas>
-              <div class="brain-axis brain-axis-left">SENSE</div>
-              <div class="brain-axis brain-axis-right">ACT</div>
+            </div>
+            <div class="brain-stats">
+              <div class="brain-stat">
+                <span>STRONG INPUT</span>
+                <strong><em id="brainDominant">—</em><b id="brainDominantValue">0.00</b></strong>
+              </div>
+              <div class="brain-stat">
+                <span>HIDDEN MEAN</span>
+                <strong><b id="brainHiddenMean">0.00</b><em>|h|</em></strong>
+              </div>
+              <div class="brain-stat">
+                <span>ACTIVE LINKS</span>
+                <strong><b id="brainActiveLinks">0</b><em id="brainTotalLinks">/0</em></strong>
+              </div>
             </div>
             <div class="output-row">
               <div class="output-meter">
@@ -262,8 +277,8 @@
               </div>
             </div>
             <div class="brain-foot">
-              <span id="brainNodeCount">10 NODES</span>
-              <span id="brainLinkCount">27 SYNAPSES</span>
+              <span id="brainArchitecture">22 → 2L · 0H → 2</span>
+              <span id="brainLinkCount">— LINKS</span>
               <span><i></i> LIVE</span>
             </div>
           </section>
@@ -286,10 +301,12 @@
           <section class="panel method-panel">
             <div class="method-mark">HN</div>
             <div class="method-copy">
-              <span>ENCODING METHOD</span>
+              <span>ENCODING METHOD / ADAPTIVE SUBSTRATE</span>
               <p>
-                A CPPN paints each synapse from the coordinates of its endpoints.
-                Selection reshapes the painter, not the worm.
+                An evolvable-substrate HyperNEAT variant. A CPPN paints each synapse
+                and emits a depth signal for 1–3 hidden layers. Weak links and
+                unsupported nodes are pruned, so depth and active topology change
+                with each genome.
               </p>
             </div>
             <div class="method-stats">

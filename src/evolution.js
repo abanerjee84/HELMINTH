@@ -7,6 +7,7 @@ import {
 import { buildSubstrate } from './neat/hyperneat.js';
 import { resolveWormCollisions } from './sim/collisions.js';
 import { Ecology } from './sim/ecology.js';
+import { ChomperPack } from './sim/predators.js';
 import { clamp, mulberry32 } from './sim/random.js';
 import { Worm } from './sim/worm.js';
 
@@ -41,6 +42,7 @@ export class Evolution {
     this.events = [];
     const seed = this.config.seed + (this.generation - 1) * ENVIRONMENT_SEED_STEP;
     this.ecology = new Ecology(seed, this.config);
+    this.predators = new ChomperPack(seed + 131, this.config, this.ecology);
     this.agents = genomes.map((genome, index) => {
       const spawn = this.ecology.spawnPoints[index];
       const heading =
@@ -66,7 +68,13 @@ export class Evolution {
         worm,
       };
     });
-    this.ranking = [...this.agents];
+    this.ranking = [...this.agents].sort((a, b) => {
+      const scoreA =
+        a.substrate.hiddenDepth * 10 + a.substrate.hiddenLayout.length;
+      const scoreB =
+        b.substrate.hiddenDepth * 10 + b.substrate.hiddenLayout.length;
+      return scoreB - scoreA || a.index - b.index;
+    });
     this.timeAlive = this.agents.length;
   }
 
@@ -89,7 +97,7 @@ export class Evolution {
     for (const agent of this.agents) {
       const worm = agent.worm;
       if (!worm.alive) continue;
-      worm.sense(this.ecology);
+      worm.sense(this.ecology, this.predators.chompers, this.agents);
       worm.think();
       const result = worm.step(dt, this.ecology);
       if (result?.food) {
@@ -128,6 +136,25 @@ export class Evolution {
         color: worm.color,
         cause: worm.deathCause,
       });
+    }
+
+    const bites = this.predators.update(dt, this.agents, this.elapsed);
+    for (const bite of bites) {
+      this.events.push({
+        type: 'chomp',
+        x: bite.x,
+        y: bite.y,
+        color: bite.color,
+      });
+      if (bite.died) {
+        this.events.push({
+          type: 'death',
+          x: bite.x,
+          y: bite.y,
+          color: bite.color,
+          cause: 'predation',
+        });
+      }
     }
 
     this.ranking = [...this.agents].sort(
@@ -229,6 +256,7 @@ export class Evolution {
 
   get leader() {
     if (this.phase === 'intermission' && this.champion) return this.champion;
+    if (this.phase === 'ready') return this.ranking[0] ?? this.agents[0];
     let leader = null;
     for (const agent of this.agents) {
       if (!agent.worm.alive) continue;

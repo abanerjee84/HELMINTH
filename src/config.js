@@ -26,6 +26,20 @@ export const CONFIG = Object.freeze({
     maxRadius: 104,
     damagePerSecond: 27,
   },
+  predators: {
+    count: 3,
+    radius: 16,
+    speed: 78,
+    lungeSpeed: 126,
+    turnRate: 2.35,
+    senseRange: 270,
+    chompRange: 24,
+    damage: 18,
+    cooldown: 2.2,
+    chompDuration: 0.42,
+    spawnClearance: 190,
+    margin: 46,
+  },
   worm: {
     segments: 15,
     spacing: 7.4,
@@ -39,6 +53,8 @@ export const CONFIG = Object.freeze({
     speedDrain: 0.0045,
     foodSensorRange: 330,
     hazardSensorRange: 260,
+    wormSensorRange: 300,
+    chomperSensorRange: 300,
     bodyFriction: 18,
     collision: {
       scale: 0.82,
@@ -49,12 +65,13 @@ export const CONFIG = Object.freeze({
     perFood: 180,
     perSecond: 6,
     perUnitTravelled: 0.018,
+    perUnitForward: 0.045,
     finalEnergy: 0.35,
     hazardPenalty: 3.5,
   },
 });
 
-export const SENSOR_COUNT = 8 + 4 + 2;
+export const SENSOR_COUNT = 8 + 4 + 4 + 4 + 2;
 
 export const WORM_PALETTE = [
   '#b9ff6a',

@@ -10,7 +10,11 @@ export const CPPN_INPUTS = Object.freeze([
 ]);
 
 const OUTPUT_ID = 999;
+const ARCH_OUTPUT_ID = 998;
 const OUTPUT_ORDER = 1000;
+const ARCH_OUTPUT_ORDER = 1001;
+export const CPPN_OUTPUT_IDS = Object.freeze([OUTPUT_ID, ARCH_OUTPUT_ID]);
+export const DEPTH_OUTPUT_ID = ARCH_OUTPUT_ID;
 const BASE_HIDDEN_IDS = [100, 101, 102];
 const BASE_HIDDEN_ORDERS = [30, 31, 32];
 
@@ -70,6 +74,13 @@ function baseNodes(hiddenActivations) {
       label: 'weight',
       activation: 'tanh',
     },
+    {
+      id: ARCH_OUTPUT_ID,
+      type: 'output',
+      order: ARCH_OUTPUT_ORDER,
+      label: 'depth',
+      activation: 'tanh',
+    },
   ];
 }
 
@@ -88,21 +99,25 @@ export function createInitialCPPN(rng) {
         enabled: true,
       });
     }
-    connections.push({
-      from: hiddenId,
-      to: OUTPUT_ID,
-      weight: clamp(gaussian(rng) * 1.05, -3, 3),
-      enabled: true,
-    });
+    for (const outputId of CPPN_OUTPUT_IDS) {
+      connections.push({
+        from: hiddenId,
+        to: outputId,
+        weight: clamp(gaussian(rng) * 1.05, -3, 3),
+        enabled: true,
+      });
+    }
   }
 
   for (const input of CPPN_INPUTS) {
-    connections.push({
-      from: input.id,
-      to: OUTPUT_ID,
-      weight: clamp(gaussian(rng) * 0.7, -2.5, 2.5),
-      enabled: true,
-    });
+    for (const outputId of CPPN_OUTPUT_IDS) {
+      connections.push({
+        from: input.id,
+        to: outputId,
+        weight: clamp(gaussian(rng) * 0.7, -2.5, 2.5),
+        enabled: true,
+      });
+    }
   }
 
   return { nodes, connections };
@@ -276,7 +291,7 @@ export function crossoverCPPN(fitter, other, rng) {
   return pruneGenome({ nodes, connections });
 }
 
-export function compileCPPN(genome) {
+export function compileCPPN(genome, outputId = OUTPUT_ID) {
   const nodes = [...genome.nodes].sort((a, b) => a.order - b.order);
   const incoming = new Map();
   for (const node of nodes) incoming.set(node.id, []);
@@ -287,7 +302,8 @@ export function compileCPPN(genome) {
   }
 
   const inputIds = CPPN_INPUTS.map((input) => input.id);
-  const outputNode = nodes.find((node) => node.type === 'output') ?? nodes[nodes.length - 1];
+  const outputNode = nodes.find((node) => node.id === outputId);
+  if (!outputNode) return () => 0;
 
   return function query(inputValues) {
     const values = new Map();
@@ -309,8 +325,8 @@ export function compileCPPN(genome) {
   };
 }
 
-export function evaluateCPPN(genome, inputValues) {
-  return compileCPPN(genome)(inputValues);
+export function evaluateCPPN(genome, inputValues, outputId = OUTPUT_ID) {
+  return compileCPPN(genome, outputId)(inputValues);
 }
 
 export function createSeededPopulation(rng, count) {
@@ -324,6 +340,7 @@ export function cppnStats(genome) {
     hidden,
     enabled,
     nodes: genome.nodes.length,
-    signature: `6 · ${hidden} · 1`,
+    outputs: CPPN_OUTPUT_IDS.length,
+    signature: `6 · ${hidden} · ${CPPN_OUTPUT_IDS.length}`,
   };
 }

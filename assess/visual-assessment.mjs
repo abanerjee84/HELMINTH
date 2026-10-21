@@ -245,6 +245,25 @@ async function run() {
       stateWhileRunning.elapsed > 2 || stateWhileRunning.generation > 1,
       `elapsed=${stateWhileRunning.elapsed.toFixed(1)}s at ${stateWhileRunning.generation} generation(s)`,
     );
+    check(
+      'chomper patrol is present',
+      stateWhileRunning.chompers === 3,
+      `${stateWhileRunning.chompers} chompers active`,
+    );
+
+    const sensoryState = await page.evaluate(() => {
+      const leader = window.__HELMINTH__.getEvolution().leader;
+      const kinds = [...new Set(leader.substrate.inputLayout.map((node) => node.kind))];
+      return { sensors: leader.worm.sensorValues.length, kinds };
+    });
+    check(
+      'worms sense food, rivals and chompers',
+      sensoryState.sensors === 22 &&
+        ['food', 'hazard', 'worm', 'chomper'].every((kind) =>
+          sensoryState.kinds.includes(kind),
+        ),
+      `${sensoryState.sensors} sensors: ${sensoryState.kinds.join(', ')}`,
+    );
 
     await page.waitForFunction(
       () => window.__HELMINTH__.getState().phase === 'intermission',

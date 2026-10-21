@@ -42,6 +42,7 @@ function resetRun() {
   dashboard.resetState();
   renderer.populationSource = null;
   renderer.ecologySource = null;
+  renderer.predatorSource = null;
   dashboard.update(evolution, state(), performance.now());
 }
 
@@ -112,8 +113,10 @@ window.__HELMINTH__ = {
     generation: evolution.generation,
     elapsed: evolution.elapsed,
     alive: evolution.aliveCount,
+    chompers: evolution.predators?.chompers.length ?? 0,
     history: evolution.history,
   }),
+  getRenderer: () => renderer,
   setSpeed,
 };
 

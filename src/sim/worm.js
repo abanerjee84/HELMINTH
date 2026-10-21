@@ -1,10 +1,12 @@
-import { CONFIG, WORLD } from '../config.js';
+import { CONFIG, SENSOR_COUNT, WORLD } from '../config.js';
 import { forwardSubstrate } from '../neat/hyperneat.js';
 import { clamp, lerp } from './random.js';
 
 const FOOD_RAYS = 8;
 const HAZARD_RAYS = 4;
-const HAZARD_OFFSETS = [0, Math.PI / 2, Math.PI, -Math.PI / 2];
+const WORM_RAYS = 4;
+const CHOMPER_RAYS = 4;
+const SENSOR_OFFSETS = [0, Math.PI / 2, Math.PI, -Math.PI / 2];
 const TWO_PI = Math.PI * 2;
 
 function wrapAngle(angle) {
@@ -24,6 +26,8 @@ export class Worm {
 
     this.x = x;
     this.y = y;
+    this.spawnX = x;
+    this.spawnY = y;
     this.heading = heading;
     this.speed = config.worm.minSpeed;
     this.steering = 0;
@@ -40,15 +44,17 @@ export class Worm {
     this.foodEnergy = 0;
     this.distanceTravelled = 0;
     this.hazardTime = 0;
+    this.predatorHits = 0;
+    this.biteFlash = 0;
     this.wallHits = 0;
     this.ateRecently = 0;
     this.collisionHits = 0;
     this.selfCollisionHits = 0;
     this.otherCollisionHits = 0;
 
-    this.sensorValues = new Array(8 + 4 + 2).fill(0);
+    this.sensorValues = new Array(SENSOR_COUNT).fill(0);
     this.activations = {
-      hidden: new Array(8).fill(0),
+      hidden: new Array(substrate.hiddenLayout.length).fill(0),
       outputs: [0, 0],
     };
     this.outputs = { turn: 0, thrust: 0 };
@@ -68,14 +74,19 @@ export class Worm {
     this.bodyClock = 0;
   }
 
+  get forwardProgress() {
+    return Math.hypot(this.x - this.spawnX, this.y - this.spawnY);
+  }
+
   get fitness() {
     const f = this.config.fitness;
     const survival = this.age * f.perSecond;
     const food = this.foodEaten * f.perFood;
     const travel = this.distanceTravelled * f.perUnitTravelled;
+    const forward = this.forwardProgress * f.perUnitForward;
     const energy = this.energy * f.finalEnergy;
     const hazard = this.hazardTime * f.hazardPenalty;
-    return Math.max(0, food + survival + travel + energy - hazard);
+    return Math.max(0, food + survival + travel + forward + energy - hazard);
   }
 
   get fitnessParts() {
@@ -84,23 +95,32 @@ export class Worm {
       food: this.foodEaten * f.perFood,
       survival: this.age * f.perSecond,
       travel: this.distanceTravelled * f.perUnitTravelled,
+      forward: this.forwardProgress * f.perUnitForward,
       energy: this.energy * f.finalEnergy,
       hazard: this.hazardTime * f.hazardPenalty,
     };
   }
 
-  sense(ecology) {
-    const { foodSensorRange, hazardSensorRange } = this.config.worm;
+  sense(ecology, predators = [], neighbors = []) {
+    const {
+      foodSensorRange,
+      hazardSensorRange,
+      wormSensorRange = foodSensorRange,
+      chomperSensorRange = hazardSensorRange,
+    } = this.config.worm;
     const foodSensors = new Array(FOOD_RAYS).fill(0);
     const hazardSensors = new Array(HAZARD_RAYS).fill(0);
-    const rangeSq = foodSensorRange * foodSensorRange;
+    const wormSensors = new Array(WORM_RAYS).fill(0);
+    const chomperSensors = new Array(CHOMPER_RAYS).fill(0);
+    const foodRangeSq = foodSensorRange * foodSensorRange;
+    const wormRangeSq = wormSensorRange * wormSensorRange;
 
     for (const food of ecology.foods) {
       if (!food.active) continue;
       const dx = food.x - this.x;
       const dy = food.y - this.y;
       const distSq = dx * dx + dy * dy;
-      if (distSq > rangeSq) continue;
+      if (distSq > foodRangeSq) continue;
       const distance = Math.sqrt(distSq) || 1;
       const closeness = 1 - distance / foodSensorRange;
       const nx = dx / distance;
@@ -130,20 +150,85 @@ export class Worm {
         edgeDistance <= 0 ? 1 : clamp(1 - edgeDistance / hazardSensorRange, 0, 1);
 
       for (let index = 0; index < HAZARD_RAYS; index += 1) {
-        const direction = this.heading + HAZARD_OFFSETS[index];
+        const direction = this.heading + SENSOR_OFFSETS[index];
         const alignment = nx * Math.cos(direction) + ny * Math.sin(direction);
-        const directional = edgeDistance <= 0 ? 0.78 + 0.22 * Math.max(0, alignment) : Math.max(0, alignment) ** 2;
+        const directional =
+          edgeDistance <= 0
+            ? 0.78 + 0.22 * Math.max(0, alignment)
+            : Math.max(0, alignment) ** 2;
         hazardSensors[index] += directional * closeness * closeness;
       }
     }
 
-    for (let index = 0; index < HAZARD_RAYS; index += 1) {
-      hazardSensors[index] = clamp(hazardSensors[index], 0, 1);
+    for (const neighbor of neighbors) {
+      const other = neighbor?.worm ?? neighbor;
+      if (!other || other === this || !other.alive) continue;
+
+      let nearestX = other.x;
+      let nearestY = other.y;
+      let nearestDistSq =
+        (nearestX - this.x) * (nearestX - this.x) +
+        (nearestY - this.y) * (nearestY - this.y);
+      for (const segment of other.body) {
+        const segmentDistSq =
+          (segment.x - this.x) * (segment.x - this.x) +
+          (segment.y - this.y) * (segment.y - this.y);
+        if (segmentDistSq < nearestDistSq) {
+          nearestDistSq = segmentDistSq;
+          nearestX = segment.x;
+          nearestY = segment.y;
+        }
+      }
+      if (nearestDistSq > wormRangeSq) continue;
+
+      const distance = Math.sqrt(nearestDistSq) || 1;
+      const closeness = 1 - distance / wormSensorRange;
+      const nx = (nearestX - this.x) / distance;
+      const ny = (nearestY - this.y) / distance;
+
+      for (let index = 0; index < WORM_RAYS; index += 1) {
+        const direction = this.heading + SENSOR_OFFSETS[index];
+        const alignment = nx * Math.cos(direction) + ny * Math.sin(direction);
+        if (alignment <= 0.04) continue;
+        wormSensors[index] += alignment ** 3 * closeness ** 1.5;
+      }
+    }
+
+    for (let index = 0; index < WORM_RAYS; index += 1) {
+      wormSensors[index] = clamp(wormSensors[index], 0, 1);
+    }
+
+    for (const predator of predators) {
+      const dx = predator.x - this.x;
+      const dy = predator.y - this.y;
+      const distance = Math.sqrt(dx * dx + dy * dy) || 1;
+      const edgeDistance = distance - predator.radius;
+      if (edgeDistance > chomperSensorRange) continue;
+      const nx = dx / distance;
+      const ny = dy / distance;
+      const closeness =
+        edgeDistance <= 0 ? 1 : clamp(1 - edgeDistance / chomperSensorRange, 0, 1);
+      const salience =
+        1 + predator.excitement * 0.32 + (predator.chompTimer > 0 ? 0.38 : 0);
+
+      for (let index = 0; index < CHOMPER_RAYS; index += 1) {
+        const direction = this.heading + SENSOR_OFFSETS[index];
+        const alignment = nx * Math.cos(direction) + ny * Math.sin(direction);
+        if (alignment <= 0.02) continue;
+        chomperSensors[index] +=
+          alignment ** 4 * closeness ** 1.55 * salience;
+      }
+    }
+
+    for (let index = 0; index < CHOMPER_RAYS; index += 1) {
+      chomperSensors[index] = clamp(chomperSensors[index], 0, 1);
     }
 
     this.sensorValues = [
       ...foodSensors,
       ...hazardSensors,
+      ...wormSensors,
+      ...chomperSensors,
       clamp(this.energy / this.maxEnergy, 0, 1),
       1,
     ];
@@ -157,10 +242,22 @@ export class Worm {
     return this.outputs;
   }
 
+  bite(amount) {
+    if (!this.alive) return false;
+    this.energy = Math.max(0, this.energy - amount);
+    this.predatorHits += 1;
+    this.biteFlash = 1;
+    if (this.energy > 0) return false;
+    this.alive = false;
+    this.deathCause = 'predation';
+    return true;
+  }
+
   step(dt, ecology) {
     if (!this.alive) return null;
 
     this.age += dt;
+    this.biteFlash = Math.max(0, this.biteFlash - dt * 3.4);
 
     const steeringTarget = this.outputs.turn;
     const throttleTarget = this.outputs.thrust;
