@@ -5,6 +5,7 @@ import {
   mutateCPPN,
 } from './neat/cppn.js';
 import { buildSubstrate } from './neat/hyperneat.js';
+import { resolveWormCollisions } from './sim/collisions.js';
 import { Ecology } from './sim/ecology.js';
 import { clamp, mulberry32 } from './sim/random.js';
 import { Worm } from './sim/worm.js';
@@ -119,6 +120,8 @@ export class Evolution {
         });
       }
     }
+
+    resolveWormCollisions(this.agents);
 
     this.ranking = [...this.agents].sort(
       (a, b) => b.worm.fitness - a.worm.fitness || a.index - b.index,

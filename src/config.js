@@ -40,6 +40,13 @@ export const CONFIG = Object.freeze({
     foodSensorRange: 330,
     hazardSensorRange: 260,
     bodyFriction: 18,
+    collision: {
+      scale: 0.82,
+      selfGuardSegments: 5,
+      response: 0.22,
+      impactSpeedLoss: 0.58,
+      cooldown: 0.35,
+    },
   },
   fitness: {
     perFood: 180,
