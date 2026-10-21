@@ -106,6 +106,8 @@ export class Dashboard {
     this.thrustValue = document.getElementById('thrustValue');
     this.turnFill = document.getElementById('turnFill');
     this.thrustFill = document.getElementById('thrustFill');
+    this.aliveTotal = document.getElementById('aliveTotal');
+    this.idlePopulation = document.getElementById('idlePopulation');
 
     this.brainCanvas = document.getElementById('brainCanvas');
     this.brainContext = this.brainCanvas.getContext('2d');
@@ -188,6 +190,10 @@ export class Dashboard {
       this.startButton.setAttribute('aria-label', 'Start evolution');
       this.setText(this.phaseLabel, 'PRE-FLIGHT');
       this.setText(this.phaseDetail, `${evolution.agents.length} substrates constructed`);
+      this.setText(
+        this.idlePopulation,
+        `${evolution.agents.length} sensory worms. Three tiny chompers.`,
+      );
     } else if (intermission) {
       this.setText(this.runStatus, running ? 'COHORT SCORED' : 'SELECTION ON HOLD');
       this.setText(
@@ -238,7 +244,9 @@ export class Dashboard {
       evolution.agents.reduce((total, agent) => total + agent.worm.fitness, 0) /
       Math.max(1, evolution.agents.length);
     const currentBest = evolution.ranking[0]?.worm.fitness ?? 0;
+    const population = evolution.agents.length;
     this.setText(this.aliveCount, String(alive));
+    this.setText(this.aliveTotal, `/${population}`);
     this.setText(this.foodCount, String(evolution.ecology.activeFoodCount()));
     this.setText(this.avgFit, formatInteger(intermission ? evolution.lastSummary?.average : average));
     this.setText(
