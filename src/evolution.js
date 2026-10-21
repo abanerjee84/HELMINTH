@@ -41,6 +41,7 @@ export class Evolution {
     this.spawnRng = mulberry32(seed ^ 0x85ebca6b);
     this.ecology = new Ecology(seed, this.config);
     this.predators = new ChomperPack(seed + 131, this.config, this.ecology);
+    this.ecology.relocateSpawnPointsAwayFrom(this.predators.chompers);
     this.agents = genomes.map((genome, index) => {
       const spawn = this.ecology.spawnPoints[index];
       const heading =

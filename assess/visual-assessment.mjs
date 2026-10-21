@@ -280,9 +280,9 @@ async function run() {
       `history=${scoredState.history.length}, best=${Math.round(scoredState.history[0]?.best ?? 0)}`,
     );
     check(
-      'generation completes only after every worm dies',
-      scoredState.alive === 0,
-      `${scoredState.alive} worms alive at intermission`,
+      'generation ends on extinction or the time cap',
+      scoredState.alive === 0 || scoredState.elapsed >= scoredState.maxGenerationSeconds,
+      `${scoredState.alive} worms alive at intermission, elapsed=${scoredState.elapsed.toFixed(1)}s of ${scoredState.maxGenerationSeconds}s cap`,
     );
 
     await page.waitForFunction(

@@ -2,10 +2,10 @@
 
 **An evolvable-substrate HyperNEAT ecology for worms that forage, sense rivals, and flee chompers.**
 
-HELMINTH is a browser-native 2D artificial-life experiment. A population of 28 neural worms is scored on nutrient intake, survival, forward progress, and hazard avoidance. Each worm's brain is a neural substrate painted by a CPPN, and the substrate's hidden depth evolves alongside its connection weights. Three small chompers patrol the arena, turning the food race into a game of risk.
+HELMINTH is a browser-native 2D artificial-life experiment. A population of 10 neural worms is scored on nutrient intake, survival, forward progress, and hazard avoidance. Each worm's brain is a neural substrate painted by a CPPN, and the substrate's hidden depth evolves alongside its connection weights. Three small chompers patrol the arena, turning the food race into a game of risk.
 
 <p align="center">
-  <img src="docs/screenshots/01-standby.png" alt="HELMINTH standby screen with 28 worms, nutrient blooms, toxic pockets, and three chompers" width="100%">
+  <img src="docs/screenshots/01-standby.png" alt="HELMINTH standby screen with 10 worms, nutrient blooms, toxic pockets, and three chompers" width="100%">
 </p>
 
 ## Highlights
@@ -72,7 +72,7 @@ The substrate close-up shows the evolved topology in motion: food, hazard, rival
 5. **Score.** Fitness combines food, survival time, straight-line travel, net forward progress, remaining energy, hazard exposure, and a turning cost.
 6. **Select.** The population is ranked; the top half is retained unchanged, the bottom half is cloned and mutated, and a 10% immigrant slice is replaced with fresh random CPPNs.
 
-A generation ends when the last worm dies or after a 120-second cap, so a robust surviving cohort cannot stall evolution. The default population is 28 worms: the top 50% are kept as elites, the bottom 50% are mutated into the next cohort, and 10% are fresh random genomes. The UI also offers a 4×/8× fast-forward control.
+A generation ends when the last worm dies or after a 120-second cap, so a robust surviving cohort cannot stall evolution. The default population is 10 worms: the top 50% are kept as elites, the bottom 50% are mutated into the next cohort, and 10% are fresh random genomes. Worms start at random positions that are evenly spaced, clear of toxic pockets, and well away from the chompers, so cohort-to-cohort fitness differences reflect behaviour rather than luck of the draw. The UI also offers a 4×/8× fast-forward control.
 
 ## Adaptive substrate
 

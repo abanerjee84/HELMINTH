@@ -9,15 +9,21 @@ export const STEP = 1 / 60;
 export const CONFIG = Object.freeze({
   seed: 4217,
   maxGenerationSeconds: 120,
-  populationSize: 28,
+  populationSize: 10,
   eliteFraction: 0.5,
   immigrantFraction: 0.1,
   food: {
-    count: 40,
+    count: 120,
     energy: 24,
     radius: 11,
     respawnSeconds: 3.8,
     minHazardDistance: 62,
+  },
+  spawn: {
+    minSpacing: 150,
+    candidates: 28,
+    margin: 96,
+    chomperClearance: 120,
   },
   hazards: {
     count: 6,

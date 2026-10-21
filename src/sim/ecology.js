@@ -20,8 +20,8 @@ export class Ecology {
     this.spawnPoints = [];
     this.hazardField = [];
 
-    this.createHazards();
     this.createSpawnPoints(config.populationSize);
+    this.createHazards();
     this.createInitialFood();
   }
 
@@ -37,7 +37,12 @@ export class Ecology {
           const minDistance = hazard.radius + radius + 96;
           return distanceSq(point.x, point.y, hazard.x, hazard.y) > minDistance * minDistance;
         });
-        if (clear) {
+        const clearOfSpawns = this.spawnPoints.every(
+          (spawn) =>
+            distanceSq(point.x, point.y, spawn.x, spawn.y) >
+            (radius + 64) * (radius + 64),
+        );
+        if (clear && clearOfSpawns) {
           candidate = {
             id: `hazard-${index}`,
             x: point.x,
@@ -51,7 +56,15 @@ export class Ecology {
       }
 
       if (!candidate) {
-        const point = randomPoint(this.rng, 120);
+        let point = randomPoint(this.rng, 120);
+        for (let attempt = 0; attempt < 200; attempt += 1) {
+          const clearOfSpawns = this.spawnPoints.every(
+            (spawn) =>
+              distanceSq(point.x, point.y, spawn.x, spawn.y) > 160 * 160,
+          );
+          if (clearOfSpawns) break;
+          point = randomPoint(this.rng, 120);
+        }
         candidate = {
           id: `hazard-${index}`,
           x: point.x,
@@ -67,28 +80,77 @@ export class Ecology {
   }
 
   createSpawnPoints(count) {
+    const { minSpacing, candidates, margin } = this.config.spawn;
     const points = [];
-    let attempts = 0;
 
-    while (points.length < count && attempts < 800) {
-      attempts += 1;
-      const point = randomPoint(this.rng, 112);
-      if (this.isInsideHazard(point.x, point.y, 46)) continue;
-      const spaced = points.every(
-        (existing) => distanceSq(existing.x, existing.y, point.x, point.y) > 82 * 82,
-      );
-      if (spaced) points.push(point);
-    }
+    for (let index = 0; index < count; index += 1) {
+      let best = null;
+      let bestClearance = -Infinity;
 
-    while (points.length < count) {
-      const angle = (points.length / count) * Math.PI * 2;
-      points.push({
-        x: WORLD.width * 0.5 + Math.cos(angle) * WORLD.width * 0.33,
-        y: WORLD.height * 0.5 + Math.sin(angle) * WORLD.height * 0.33,
-      });
+      for (let attempt = 0; attempt < candidates; attempt += 1) {
+        const point = randomPoint(this.rng, margin);
+        if (this.isInsideHazard(point.x, point.y, 46)) continue;
+
+        let nearest = Infinity;
+        for (const existing of points) {
+          nearest = Math.min(nearest, Math.hypot(existing.x - point.x, existing.y - point.y));
+        }
+        if (nearest > bestClearance) {
+          bestClearance = nearest;
+          best = point;
+        }
+      }
+
+      if (!best) {
+        const angle = (index / count) * Math.PI * 2;
+        best = {
+          x: WORLD.width * 0.5 + Math.cos(angle) * WORLD.width * 0.33,
+          y: WORLD.height * 0.5 + Math.sin(angle) * WORLD.height * 0.33,
+        };
+        bestClearance = Infinity;
+      }
+
+      points.push(best);
     }
 
     this.spawnPoints = points;
+  }
+
+  relocateSpawnPointsAwayFrom(chompers) {
+    const { chomperClearance, margin } = this.config.spawn;
+    const points = [];
+
+    for (const spawn of this.spawnPoints) {
+      let point = spawn;
+      for (let attempt = 0; attempt < 240; attempt += 1) {
+        const nearChomper = chompers.some(
+          (chomper) =>
+            distanceSq(point.x, point.y, chomper.x, chomper.y) <
+            (chomper.radius + chomperClearance) * (chomper.radius + chomperClearance),
+        );
+        if (!nearChomper && !this.isInsideHazard(point.x, point.y, 46)) break;
+        point = randomPoint(this.rng, margin);
+      }
+      points.push(point);
+    }
+
+    this.spawnPoints = points;
+    this.separateFoodFromSpawns();
+  }
+
+  separateFoodFromSpawns() {
+    const margin = 64;
+    for (const food of this.foods) {
+      for (let attempt = 0; attempt < 200; attempt += 1) {
+        const clear = this.spawnPoints.every(
+          (spawn) => distanceSq(food.x, food.y, spawn.x, spawn.y) > 72 * 72,
+        );
+        if (clear) break;
+        const position = this.findFoodPosition();
+        food.x = position.x;
+        food.y = position.y;
+      }
+    }
   }
 
   createInitialFood() {

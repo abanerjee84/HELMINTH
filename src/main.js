@@ -115,6 +115,7 @@ window.__HELMINTH__ = {
     alive: evolution.aliveCount,
     chompers: evolution.predators?.chompers.length ?? 0,
     history: evolution.history,
+    maxGenerationSeconds: CONFIG.maxGenerationSeconds,
   }),
   getRenderer: () => renderer,
   setSpeed,
