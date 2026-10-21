@@ -70,9 +70,9 @@ The substrate close-up shows the evolved topology in motion: food, hazard, rival
 3. **Move.** Steering, thrust, speed, body joints, wall contact, and energy drain update at a fixed 60 Hz simulation step.
 4. **Interact.** Food is consumed, toxic blooms damage worms, worm bodies collide, and chompers bite.
 5. **Score.** Fitness combines food, survival time, distance travelled, net forward progress, remaining energy, and hazard exposure.
-6. **Select.** The population is ranked; elites survive, and tournament selection with crossover and mutation produces the next cohort.
+6. **Select.** The population is ranked; the top half is retained unchanged, and the bottom half is cloned and mutated into the next cohort.
 
-A generation ends when the last worm dies or after a 120-second cap, so a robust surviving cohort cannot stall evolution. The default population is 28 worms, with 3 elites, tournament size 4, crossover rate 0.72, and a 4×/8× fast-forward control.
+A generation ends when the last worm dies or after a 120-second cap, so a robust surviving cohort cannot stall evolution. The default population is 28 worms: the top 50% are kept as elites, and the bottom 50% are cloned and mutated into the next cohort. The UI also offers a 4×/8× fast-forward control.
 
 ## Adaptive substrate
 

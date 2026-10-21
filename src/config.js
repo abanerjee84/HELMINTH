@@ -10,9 +10,7 @@ export const CONFIG = Object.freeze({
   seed: 4217,
   maxGenerationSeconds: 120,
   populationSize: 28,
-  eliteCount: 3,
-  tournamentSize: 4,
-  crossoverRate: 0.72,
+  eliteFraction: 0.5,
   food: {
     count: 40,
     energy: 24,

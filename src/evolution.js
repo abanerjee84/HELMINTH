@@ -1,7 +1,6 @@
 import { CONFIG, WORM_PALETTE, WORLD } from './config.js';
 import {
   createInitialCPPN,
-  crossoverCPPN,
   mutateCPPN,
 } from './neat/cppn.js';
 import { buildSubstrate } from './neat/hyperneat.js';
@@ -204,41 +203,24 @@ export class Evolution {
 
     const previous = this.ranking;
     const genomes = [];
-    const eliteCount = Math.min(this.config.eliteCount, previous.length);
+    const eliteCount = Math.max(
+      1,
+      Math.ceil(previous.length * this.config.eliteFraction),
+    );
 
     for (let index = 0; index < eliteCount; index += 1) {
       genomes.push(this.cloneGenome(previous[index].genome));
     }
 
-    while (genomes.length < this.config.populationSize) {
-      const fitter = this.tournament(previous);
-      let genome = this.cloneGenome(fitter.genome);
-
-      if (this.populationRng() < this.config.crossoverRate) {
-        let mate = this.tournament(previous);
-        if (mate === fitter) mate = previous[Math.floor(this.populationRng() * previous.length)];
-        if (mate !== fitter) {
-          const primary = fitter.worm.fitness >= mate.worm.fitness ? fitter : mate;
-          const secondary = primary === fitter ? mate : fitter;
-          genome = crossoverCPPN(primary.genome, secondary.genome, this.populationRng);
-        }
-      }
-
-      genomes.push(mutateCPPN(genome, this.populationRng));
+    for (let index = eliteCount; index < previous.length; index += 1) {
+      genomes.push(
+        mutateCPPN(this.cloneGenome(previous[index].genome), this.populationRng),
+      );
     }
 
     this.generation += 1;
     this.spawnGeneration(genomes);
     this.phase = 'running';
-  }
-
-  tournament(candidates) {
-    let winner = candidates[Math.floor(this.populationRng() * candidates.length)];
-    for (let index = 1; index < this.config.tournamentSize; index += 1) {
-      const contender = candidates[Math.floor(this.populationRng() * candidates.length)];
-      if (contender.worm.fitness > winner.worm.fitness) winner = contender;
-    }
-    return winner;
   }
 
   cloneGenome(genome) {
