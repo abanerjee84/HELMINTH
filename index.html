@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="A live HyperNEAT worm ecology: evolve a population of neural worms in a nutrient-dark arena."
+    />
+    <meta name="theme-color" content="#050d0b" />
+    <title>HELMINTH — HyperNEAT Ecology</title>
+  </head>
+  <body>
+    <div id="app">
+      <header class="topbar">
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 44 44" fill="none">
+              <path
+                d="M9 28c4.5-9 9-9 13.5 0S31 37 35 28"
+                stroke="currentColor"
+                stroke-width="2.4"
+                stroke-linecap="round"
+              />
+              <path
+                d="M9 18c4.5-9 9-9 13.5 0S31 27 35 18"
+                stroke="currentColor"
+                stroke-width="1.2"
+                stroke-linecap="round"
+                opacity=".38"
+              />
+              <circle cx="9" cy="27.6" r="3.2" fill="currentColor" />
+              <circle cx="9.9" cy="26.7" r=".85" fill="#07120e" />
+            </svg>
+          </div>
+          <div class="brand-copy">
+            <h1>HELMINTH<span>.</span></h1>
+            <p>HYPERNEAT ECOLOGY / RUN 042</p>
+          </div>
+        </div>
+
+        <div class="run-status" data-testid="run-status">
+          <span class="live-pip"></span>
+          <div>
+            <strong id="runStatus">STANDBY</strong>
+            <span id="statusMeta">Awaiting the first selection event</span>
+          </div>
+        </div>
+
+        <div class="tech-readout">
+          <div>
+            <span>ENCODER</span>
+            <strong>CPPN / HYPERNEAT</strong>
+          </div>
+          <div>
+            <span>RENDER</span>
+            <strong>THREE.JS · 2D</strong>
+          </div>
+          <div class="fps-block">
+            <span>FRAME</span>
+            <strong><b id="fpsValue">60</b> FPS</strong>
+          </div>
+        </div>
+      </header>
+
+      <main class="workspace">
+        <aside class="side-panel left-panel">
+          <section class="panel control-panel">
+            <div class="panel-kicker"><span>01</span> SELECTION ENGINE</div>
+            <h2>Teach a worm<br /><em>to want tomorrow.</em></h2>
+            <p class="lede">
+              A population of blind neural worms forages a toxic biotope. Their
+              CPPN genomes are scored on nutrients, endurance and hazard
+              avoidance.
+            </p>
+
+            <button
+              class="start-button"
+              id="startBtn"
+              data-testid="start-button"
+              type="button"
+              aria-label="Start evolution"
+            >
+              <span class="start-icon" aria-hidden="true">
+                <svg class="icon-play" viewBox="0 0 20 20">
+                  <path d="M6.2 3.6 15 10l-8.8 6.4V3.6Z" fill="currentColor" />
+                </svg>
+                <svg class="icon-pause" viewBox="0 0 20 20">
+                  <path d="M5.4 3.8h3.2v12.4H5.4zM11.4 3.8h3.2v12.4h-3.2z" fill="currentColor" />
+                </svg>
+              </span>
+              <span class="start-copy">
+                <strong id="startLabel">Start evolution</strong>
+                <small id="startHint">Seed population · run genetic algorithm</small>
+              </span>
+              <span class="start-edge" aria-hidden="true">GA</span>
+            </button>
+
+            <div class="control-strip">
+              <div class="speed-control" aria-label="Simulation speed">
+                <span>RATE</span>
+                <div class="speed-segments">
+                  <button type="button" data-speed="1" aria-label="Run at 1 times speed">1×</button>
+                  <button type="button" data-speed="4" class="is-active" aria-label="Run at 4 times speed">4×</button>
+                  <button type="button" data-speed="8" aria-label="Run at 8 times speed">8×</button>
+                </div>
+              </div>
+              <button class="reset-button" id="resetBtn" type="button" aria-label="Reset evolution run">
+                <svg viewBox="0 0 20 20" aria-hidden="true">
+                  <path
+                    d="M4.5 6.2A6.4 6.4 0 1 1 3.7 11M4.5 6.2V2.8M4.5 6.2H8"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.4"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+                <span>Reset</span>
+              </button>
+            </div>
+
+            <div class="panel-foot">
+              <span>POP 28</span><i></i><span>ELITE 03</span><i></i><span>TOURNEY 04</span>
+            </div>
+          </section>
+
+          <section class="panel generation-panel">
+            <div class="section-heading">
+              <span>02 / GENERATION</span>
+              <strong id="genTime">00:36</strong>
+            </div>
+            <div class="generation-readout">
+              <div class="gen-number">
+                <span id="genNumber" data-testid="generation">01</span>
+                <small>cohort</small>
+              </div>
+              <div class="phase-copy">
+                <span id="phaseLabel">PRE-FLIGHT</span>
+                <p id="phaseDetail">28 substrates constructed</p>
+              </div>
+            </div>
+            <div class="progress-track" aria-hidden="true">
+              <span class="progress-fill" id="genProgress"></span>
+              <i></i><i></i><i></i>
+            </div>
+            <div class="stat-grid">
+              <div class="stat">
+                <span>ALIVE</span>
+                <strong><b id="aliveCount" data-testid="alive">28</b><small>/28</small></strong>
+              </div>
+              <div class="stat">
+                <span>NUTRIENTS</span>
+                <strong><b id="foodCount" data-testid="food">40</b><small>live</small></strong>
+              </div>
+              <div class="stat">
+                <span>MEAN FIT</span>
+                <strong id="avgFit">0</strong>
+              </div>
+              <div class="stat">
+                <span>BEST FIT</span>
+                <strong class="acid" id="bestFit" data-testid="best-fitness">0</strong>
+              </div>
+            </div>
+          </section>
+
+          <section class="panel leaderboard-panel">
+            <div class="section-heading">
+              <span>03 / LEADERBOARD</span>
+              <strong>LIVE FIT</strong>
+            </div>
+            <article class="leader-card" id="leaderCard" style="--agent: #b9ff6a">
+              <div class="leader-rank">01</div>
+              <div class="leader-identity">
+                <div class="agent-name">
+                  <span class="agent-dot"></span>
+                  <strong id="leaderName">WORM 00</strong>
+                  <span class="leader-tag">LEADER</span>
+                </div>
+                <span id="leaderGenome">CPPN 6 · 3 · 1</span>
+              </div>
+              <div class="leader-score">
+                <span>FITNESS</span>
+                <strong id="leaderScore">0000</strong>
+              </div>
+              <div class="leader-metrics">
+                <div><span>NUTRIENTS</span><b id="leaderFood">0</b></div>
+                <div><span>LIFESPAN</span><b id="leaderTime">0s</b></div>
+                <div><span>ENERGY</span><b id="leaderEnergy">0%</b></div>
+              </div>
+              <div class="energy-track"><span id="leaderEnergyBar"></span></div>
+            </article>
+            <div class="standings" id="standings" aria-label="Population standings"></div>
+          </section>
+        </aside>
+
+        <section class="arena-card" aria-label="Live ecology viewport">
+          <div id="arenaHost" class="arena-host" data-testid="arena"></div>
+
+          <div class="arena-hud">
+            <div class="arena-top">
+              <div class="culture-tag">
+                <span class="culture-pip"></span>
+                <div><small>LIVE CULTURE</small><strong>BIOTOPE A–042</strong></div>
+              </div>
+              <div class="condition-tags">
+                <span><i class="food-swatch"></i>NUTRIENT BLOOM</span>
+                <span><i class="toxin-swatch"></i>TOXIC POCKET</span>
+              </div>
+            </div>
+
+            <div class="crosshair crosshair-tl"></div>
+            <div class="crosshair crosshair-tr"></div>
+            <div class="crosshair crosshair-bl"></div>
+            <div class="crosshair crosshair-br"></div>
+
+            <div class="idle-prompt" id="idlePrompt">
+              <span>SIMULATION READY</span>
+              <strong>28 blind worms. One nutrient field.</strong>
+              <p>Press start to let selection find a nervous system that can survive.</p>
+            </div>
+
+            <div class="generation-toast" id="generationToast">
+              <span id="toastEyebrow">COHORT SCORED</span>
+              <strong id="toastTitle">Generation 01 complete</strong>
+              <p id="toastDetail">Champion fitness 0 · breeding next cohort</p>
+            </div>
+
+            <div class="arena-bottom">
+              <div class="arena-legend">
+                <span><i class="legend-worm"></i>NEURAL WORM</span>
+                <span><i class="legend-food"></i>NUTRIENT</span>
+                <span><i class="legend-toxin"></i>TOXIC BLOOM</span>
+              </div>
+              <div class="objective-tag">
+                <span>SELECTION OBJECTIVE</span>
+                <strong>FORAGE · SURVIVE · REPLICATE</strong>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <aside class="side-panel right-panel">
+          <section class="panel brain-panel">
+            <div class="section-heading">
+              <span>04 / SUBSTRATE ACTIVITY</span>
+              <strong id="cppnSignature">CPPN 6 · 3 · 1</strong>
+            </div>
+            <div class="brain-stage">
+              <canvas id="brainCanvas" aria-label="Live HyperNEAT neural substrate visualization"></canvas>
+              <div class="brain-axis brain-axis-left">SENSE</div>
+              <div class="brain-axis brain-axis-right">ACT</div>
+            </div>
+            <div class="output-row">
+              <div class="output-meter">
+                <div class="output-label"><span>TURN</span><b id="turnValue">0.00</b></div>
+                <div class="dual-meter"><i class="zero"></i><span id="turnFill"></span></div>
+              </div>
+              <div class="output-meter">
+                <div class="output-label"><span>THRUST</span><b id="thrustValue">0.00</b></div>
+                <div class="linear-meter"><span id="thrustFill"></span></div>
+              </div>
+            </div>
+            <div class="brain-foot">
+              <span id="brainNodeCount">10 NODES</span>
+              <span id="brainLinkCount">27 SYNAPSES</span>
+              <span><i></i> LIVE</span>
+            </div>
+          </section>
+
+          <section class="panel fitness-panel">
+            <div class="section-heading">
+              <span>05 / FITNESS TRACE</span>
+              <div class="trace-legend"><i class="best"></i>BEST <i class="avg"></i>MEAN</div>
+            </div>
+            <div class="chart-wrap">
+              <canvas id="fitnessCanvas" aria-label="Fitness history chart"></canvas>
+            </div>
+            <div class="chart-footer">
+              <div><span>BEST EVER</span><strong id="bestEver">0</strong></div>
+              <div><span>LAST CHAMPION</span><strong id="lastChampion">—</strong></div>
+              <div><span>COHORTS</span><strong id="cohortCount">00</strong></div>
+            </div>
+          </section>
+
+          <section class="panel method-panel">
+            <div class="method-mark">HN</div>
+            <div class="method-copy">
+              <span>ENCODING METHOD</span>
+              <p>
+                A CPPN paints each synapse from the coordinates of its endpoints.
+                Selection reshapes the painter, not the worm.
+              </p>
+            </div>
+            <div class="method-stats">
+              <div><span>HIDDEN CPPN</span><b id="hiddenNodes">3</b></div>
+              <div><span>SYNAPSES</span><b id="synapseCount">27</b></div>
+              <div><span>MUTATION</span><b>LIVE</b></div>
+            </div>
+          </section>
+        </aside>
+      </main>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

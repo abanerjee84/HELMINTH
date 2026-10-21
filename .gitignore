@@ -1,0 +1,11 @@
+node_modules/
+dist/
+*.log
+*.pid
+.artifacts/
+artifacts/
+assess/output/
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store
