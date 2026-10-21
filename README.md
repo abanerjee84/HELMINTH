@@ -72,7 +72,7 @@ The substrate close-up shows the evolved topology in motion: food, hazard, rival
 5. **Score.** Fitness combines food, survival time, distance travelled, net forward progress, remaining energy, and hazard exposure.
 6. **Select.** The population is ranked; elites survive, and tournament selection with crossover and mutation produces the next cohort.
 
-There is no generation time limit. A generation ends only when the last worm dies. The default population is 28 worms, with 3 elites, tournament size 4, crossover rate 0.72, and a 4×/8× fast-forward control.
+A generation ends when the last worm dies or after a 120-second cap, so a robust surviving cohort cannot stall evolution. The default population is 28 worms, with 3 elites, tournament size 4, crossover rate 0.72, and a 4×/8× fast-forward control.
 
 ## Adaptive substrate
 

@@ -11,8 +11,6 @@ import { ChomperPack } from './sim/predators.js';
 import { mulberry32 } from './sim/random.js';
 import { Worm } from './sim/worm.js';
 
-const ENVIRONMENT_SEED_STEP = 7919;
-
 export class Evolution {
   constructor(config = CONFIG) {
     this.config = config;
@@ -40,14 +38,15 @@ export class Evolution {
   spawnGeneration(genomes) {
     this.elapsed = 0;
     this.events = [];
-    const seed = this.config.seed + (this.generation - 1) * ENVIRONMENT_SEED_STEP;
+    const seed = this.config.seed;
+    this.spawnRng = mulberry32(seed ^ 0x85ebca6b);
     this.ecology = new Ecology(seed, this.config);
     this.predators = new ChomperPack(seed + 131, this.config, this.ecology);
     this.agents = genomes.map((genome, index) => {
       const spawn = this.ecology.spawnPoints[index];
       const heading =
         Math.atan2(WORLD.height * 0.5 - spawn.y, WORLD.width * 0.5 - spawn.x) +
-        (this.populationRng() - 0.5) * 0.9;
+        (this.spawnRng() - 0.5) * 0.9;
       const substrate = buildSubstrate(genome);
       const worm = new Worm({
         id: `${this.generation}-${index}`,
@@ -165,7 +164,7 @@ export class Evolution {
       0,
     );
 
-    if (this.timeAlive === 0) {
+    if (this.timeAlive === 0 || this.elapsed >= this.config.maxGenerationSeconds) {
       this.completeGeneration();
     }
   }

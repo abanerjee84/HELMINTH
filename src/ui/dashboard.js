@@ -815,7 +815,7 @@ export class Dashboard {
     const { width, height } = canvasSize(this.fitnessCanvas, ctx);
     ctx.clearRect(0, 0, width, height);
 
-    const padding = { left: 24, right: 6, top: 10, bottom: 18 };
+    const padding = { left: 24, right: 22, top: 10, bottom: 18 };
     const plotWidth = Math.max(10, width - padding.left - padding.right);
     const plotHeight = Math.max(10, height - padding.top - padding.bottom);
     const x = (index, length) =>
@@ -860,23 +860,35 @@ export class Dashboard {
       return;
     }
 
-    const maxValue = Math.max(
-      100,
-      ...history.map((entry) => entry.best),
-      ...history.map((entry) => entry.average),
-    );
-    const niceMax = Math.ceil((maxValue * 1.12) / 100) * 100;
-    const y = (value) =>
-      padding.top + plotHeight - Math.min(1, value / niceMax) * plotHeight;
+    const bestMax = Math.max(100, ...history.map((entry) => entry.best));
+    const meanMax = Math.max(100, ...history.map((entry) => entry.average));
+    const niceBestMax = Math.ceil((bestMax * 1.12) / 100) * 100;
+    const niceMeanMax = Math.ceil((meanMax * 1.12) / 50) * 50;
+    const yBest = (value) =>
+      padding.top + plotHeight - Math.min(1, value / niceBestMax) * plotHeight;
+    const yMean = (value) =>
+      padding.top + plotHeight - Math.min(1, value / niceMeanMax) * plotHeight;
 
     ctx.save();
     ctx.font = '500 6.4px "JetBrains Mono Variable", monospace';
-    ctx.fillStyle = 'rgba(92, 125, 109, 0.72)';
     ctx.textAlign = 'right';
-    ctx.fillText(formatInteger(niceMax), padding.left - 5, padding.top + 3);
-    ctx.fillText(formatInteger(niceMax / 2), padding.left - 5, padding.top + plotHeight / 2 + 3);
+    ctx.fillStyle = 'rgba(200, 255, 109, 0.62)';
+    ctx.fillText(formatInteger(niceBestMax), padding.left - 5, padding.top + 3);
+    ctx.fillText(formatInteger(niceBestMax / 2), padding.left - 5, padding.top + plotHeight / 2 + 3);
     ctx.fillText('0', padding.left - 5, padding.top + plotHeight + 2);
     ctx.textAlign = 'left';
+    ctx.fillStyle = 'rgba(105, 239, 209, 0.62)';
+    ctx.fillText(
+      formatInteger(niceMeanMax),
+      width - padding.right + 5,
+      padding.top + 3,
+    );
+    ctx.fillText(
+      formatInteger(niceMeanMax / 2),
+      width - padding.right + 5,
+      padding.top + plotHeight / 2 + 3,
+    );
+    ctx.fillText('0', width - padding.right + 5, padding.top + plotHeight + 2);
     const tickCount = Math.min(4, history.length);
     for (let index = 0; index < tickCount; index += 1) {
       const historyIndex =
@@ -890,11 +902,11 @@ export class Dashboard {
 
     const bestPoints = history.map((entry, index) => ({
       x: x(index, history.length),
-      y: y(entry.best),
+      y: yBest(entry.best),
     }));
     const averagePoints = history.map((entry, index) => ({
       x: x(index, history.length),
-      y: y(entry.average),
+      y: yMean(entry.average),
     }));
 
     const area = ctx.createLinearGradient(0, padding.top, 0, padding.top + plotHeight);

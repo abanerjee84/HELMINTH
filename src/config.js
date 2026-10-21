@@ -8,6 +8,7 @@ export const STEP = 1 / 60;
 
 export const CONFIG = Object.freeze({
   seed: 4217,
+  maxGenerationSeconds: 120,
   populationSize: 28,
   eliteCount: 3,
   tournamentSize: 4,
