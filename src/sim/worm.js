@@ -6,6 +6,7 @@ const FOOD_RAYS = 8;
 const HAZARD_RAYS = 4;
 const WORM_RAYS = 4;
 const CHOMPER_RAYS = 4;
+const SELF_RAYS = 2;
 const SENSOR_OFFSETS = [0, Math.PI / 2, Math.PI, -Math.PI / 2];
 const TWO_PI = Math.PI * 2;
 
@@ -110,11 +111,13 @@ export class Worm {
       hazardSensorRange,
       wormSensorRange = foodSensorRange,
       chomperSensorRange = hazardSensorRange,
+      spacing,
     } = this.config.worm;
     const foodSensors = new Array(FOOD_RAYS).fill(0);
     const hazardSensors = new Array(HAZARD_RAYS).fill(0);
     const wormSensors = new Array(WORM_RAYS).fill(0);
     const chomperSensors = new Array(CHOMPER_RAYS).fill(0);
+    const selfSensors = new Array(SELF_RAYS).fill(0);
     const foodRangeSq = foodSensorRange * foodSensorRange;
     const wormRangeSq = wormSensorRange * wormSensorRange;
 
@@ -227,11 +230,44 @@ export class Worm {
       chomperSensors[index] = clamp(chomperSensors[index], 0, 1);
     }
 
+    const selfGuard = this.config.worm.collision.selfGuardSegments ?? 0;
+    let selfFold = 0;
+    let selfSide = 0;
+    for (let index = selfGuard; index < this.body.length - 1; index += 1) {
+      const a = this.body[index];
+      const b = this.body[index + 1];
+      const abx = b.x - a.x;
+      const aby = b.y - a.y;
+      const lengthSq = abx * abx + aby * aby;
+      const t =
+        lengthSq > 0.0001
+          ? Math.max(
+              0,
+              Math.min(1, ((this.x - a.x) * abx + (this.y - a.y) * aby) / lengthSq),
+            )
+          : 0;
+      const pointX = a.x + abx * t;
+      const pointY = a.y + aby * t;
+      const distance = Math.hypot(this.x - pointX, this.y - pointY);
+      const natural = index * spacing;
+      const fold = clamp((natural - distance) / natural, 0, 1);
+      if (fold <= selfFold) continue;
+      selfFold = fold;
+      const vx = pointX - this.x;
+      const vy = pointY - this.y;
+      const length = Math.hypot(vx, vy) || 1;
+      selfSide =
+        ((Math.cos(this.heading) * vy - Math.sin(this.heading) * vx) / length) * fold;
+    }
+    selfSensors[0] = selfFold;
+    selfSensors[1] = selfSide;
+
     this.sensorValues = [
       ...foodSensors,
       ...hazardSensors,
       ...wormSensors,
       ...chomperSensors,
+      ...selfSensors,
       clamp(this.energy / this.maxEnergy, 0, 1),
       1,
     ];

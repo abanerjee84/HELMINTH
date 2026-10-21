@@ -50,6 +50,7 @@ function inputColor(kind) {
   if (kind === 'hazard') return '#ff6e9b';
   if (kind === 'worm') return '#6bc8ff';
   if (kind === 'chomper') return '#ff9b71';
+  if (kind === 'self') return '#c9a0ff';
   if (kind === 'energy') return '#ffc96b';
   return '#85a99a';
 }

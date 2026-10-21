@@ -71,7 +71,7 @@ export const CONFIG = Object.freeze({
   },
 });
 
-export const SENSOR_COUNT = 8 + 4 + 4 + 4 + 2;
+export const SENSOR_COUNT = 8 + 4 + 4 + 4 + 2 + 2;
 
 export const WORM_PALETTE = [
   '#b9ff6a',

@@ -257,9 +257,9 @@ async function run() {
       return { sensors: leader.worm.sensorValues.length, kinds };
     });
     check(
-      'worms sense food, rivals and chompers',
-      sensoryState.sensors === 22 &&
-        ['food', 'hazard', 'worm', 'chomper'].every((kind) =>
+      'worms sense food, rivals, chompers and their own body',
+      sensoryState.sensors === 24 &&
+        ['food', 'hazard', 'worm', 'chomper', 'self'].every((kind) =>
           sensoryState.kinds.includes(kind),
         ),
       `${sensoryState.sensors} sensors: ${sensoryState.kinds.join(', ')}`,

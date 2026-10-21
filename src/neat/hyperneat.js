@@ -9,6 +9,7 @@ const FOOD_LABELS = ['F', 'FL', 'L', 'BL', 'B', 'BR', 'R', 'FR'];
 const HAZARD_LABELS = ['H·F', 'H·L', 'H·B', 'H·R'];
 const WORM_LABELS = ['W·F', 'W·L', 'W·B', 'W·R'];
 const CHOMPER_LABELS = ['C·F', 'C·L', 'C·B', 'C·R'];
+const SELF_LABELS = ['S·P', 'S·B'];
 
 function ringPosition(angle, radius) {
   return {
@@ -60,6 +61,8 @@ function createInputLayout() {
     });
   }
 
+  inputs.push({ kind: 'self', index: 0, label: SELF_LABELS[0], x: -0.74, y: 0.44 });
+  inputs.push({ kind: 'self', index: 1, label: SELF_LABELS[1], x: 0.74, y: 0.44 });
   inputs.push({ kind: 'energy', index: 0, label: 'E', x: 0, y: 0.21 });
   inputs.push({ kind: 'bias', index: 0, label: 'B', x: 0, y: -0.17 });
   return inputs;

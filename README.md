@@ -11,11 +11,11 @@ HELMINTH is a browser-native 2D artificial-life experiment. A population of 28 n
 ## Highlights
 
 - **Evolvable-substrate HyperNEAT** — 1–3 hidden layers, four candidate nodes per layer, CPPN-painted synapses, and pruning of weak or unsupported nodes.
-- **22-channel sensorium** — 8 food rays, 4 hazard rays, 4 rival-worm rays, 4 chomper rays, energy, and bias.
+- **24-channel sensorium** — 8 food rays, 4 hazard rays, 4 rival-worm rays, 4 chomper rays, 2 self-body rays, energy, and bias.
 - **Body-aware worms** — 15-segment bodies, self-collision, worm-to-worm collision, wall response, and lethal energy loss.
 - **Chomper patrol** — three predators that wander, chase, lunge, bite, digest, and retreat.
 - **Live neurotelemetry** — substrate graph, active links, hidden-layer depth, strongest sensor, motor outputs, fitness trace, and live ranking.
-- **Evidence-based UI checks** — a Playwright assessment verifies the ecology, the 22-sensor contract, responsive layout, and the absence of page errors.
+- **Evidence-based UI checks** — a Playwright assessment verifies the ecology, the 24-sensor contract, responsive layout, and the absence of page errors.
 
 ## Quick start
 
@@ -58,14 +58,14 @@ The assessment builds the production bundle, starts a temporary static server, a
 | ![Worms foraging while chompers patrol](docs/screenshots/02-selection-live.png) | ![Generation complete with fitness trace](docs/screenshots/03-cohort-scored.png) |
 
 <p align="center">
-  <img src="docs/screenshots/04-substrate.png" alt="Live substrate panel showing 22 sensors, two hidden layers, and 43 links" width="380">
+  <img src="docs/screenshots/04-substrate.png" alt="Live substrate panel showing 24 sensors, one hidden layer, and 40 links" width="380">
 </p>
 
-The substrate close-up shows the evolved topology in motion: food, hazard, rival, and chomper channels feed the hidden layers, while the readout reports `22 → 2L · 4H → 2` and `43 LINKS`.
+The substrate close-up shows the evolved topology in motion: food, hazard, rival, chomper, and self-body channels feed the hidden layers, while the readout reports `24 → 1L · 3H → 2` and `40 LINKS`.
 
 ## How a generation works
 
-1. **Sense.** Each living worm samples the 22-channel sensorium.
+1. **Sense.** Each living worm samples the 24-channel sensorium.
 2. **Think.** The worm's substrate performs a forward pass and emits turn and thrust outputs.
 3. **Move.** Steering, thrust, speed, body joints, wall contact, and energy drain update at a fixed 60 Hz simulation step.
 4. **Interact.** Food is consumed, toxic blooms damage worms, worm bodies collide, and chompers bite.
@@ -84,7 +84,7 @@ The CPPN is a small fixed-topology network (`6 → 3 → 2` in the UI). It is qu
 - hidden-to-hidden links only point forward;
 - inputs connect to hidden nodes and directly to motor outputs.
 
-The result is a different active topology for each genome, shown live as `22 → nL · hH → 2`, with the number of active links and hidden mean activation.
+The result is a different active topology for each genome, shown live as `24 → nL · hH → 2`, with the number of active links and hidden mean activation.
 
 ## Sensorium
 
@@ -94,10 +94,11 @@ The result is a different active topology for each genome, shown live as `22 →
 | Hazard | 4 | 260 | Toxic-pocket proximity, with stronger signal inside the bloom |
 | Rival worm | 4 | 300 | Direction and closeness to the nearest point on another worm's body |
 | Chomper | 4 | 300 | Direction and closeness to a chomper, boosted by chase excitement and active chomping |
+| Self body | 2 | — | How tightly the head is folded against its own trailing segments, and which side that body lies on |
 | Energy | 1 | — | Current energy normalized to maximum |
 | Bias | 1 | — | Constant `1` |
 
-Food uses eight rays around the heading. Hazard, rival, and chomper channels each use four rays. Rival sensing samples the nearest body segment rather than only the other worm's head, so body contact is represented too.
+Food uses eight rays around the heading. Hazard, rival, and chomper channels each use four rays. Rival sensing samples the nearest body segment rather than only the other worm's head, so body contact is represented too. The two self channels let a worm feel its own body: one reports how far the head has folded back onto its trailing segments, the other reports which side that body lies on, so a coil can be unwound before it becomes a lethal self-collision.
 
 ## Fitness
 
@@ -158,7 +159,7 @@ assess/                Playwright visual and behavioral assessment
 
 - WebGL arena geometry and visible motion;
 - three active chompers;
-- 22 sensors with food, hazard, worm, and chomper channels;
+- 24 sensors with food, hazard, worm, chomper, and self-body channels;
 - cohort scoring and advancement to the next generation;
 - intermission only after every worm has died;
 - pause/resume behavior;
